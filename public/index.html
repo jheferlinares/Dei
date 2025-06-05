@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concurso de Referidos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Concurso de referidos</h1>
+    
+    <div class="form-container">
+      <h2>Agregar Referidos</h2>
+      <form id="referidoForm">
+        <div class="form-group">
+          <label for="nombre">Nombre del empleado:</label>
+          <input type="text" id="nombre" required>
+        </div>
+        <div class="form-group">
+          <label for="cantidad">Cantidad de Referidos:</label>
+          <input type="number" id="cantidad" min="1" value="1" required>
+        </div>
+        <button type="submit" class="btn">Agregar</button>
+      </form>
+    </div>
+
+    <div class="admin-controls">
+      <button id="reiniciarBtn" class="btn btn-danger">Reiniciar Datos (Nuevo Mes)</button>
+    </div>
+    
+    <div class="results-container">
+      <h2>Referidos del Mes de Junio</h2>
+      <div class="chart-container" id="chartContainer"></div>
+      <div class="table-container">
+        <table id="referidosTable">
+          <thead>
+            <tr>
+              <th>Trabajador</th>
+              <th>Referidos</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="referidosBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

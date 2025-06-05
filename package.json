@@ -1,0 +1,13 @@
+{
+  "name": "app-referidos",
+  "version": "1.0.0",
+  "description": "Aplicación para seguimiento de referidos por trabajador",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2"
+  }
+}
