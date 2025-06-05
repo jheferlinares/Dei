@@ -89,8 +89,21 @@ app.delete('/api/referidos/:id', (req, res) => {
 
 // Reiniciar datos (para cambio de mes)
 app.post('/api/reiniciar', (req, res) => {
+  // Crear copia de seguridad antes de reiniciar
+  const fecha = new Date();
+  const nombreBackup = `backup_${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}.json`;
+  const backupPath = path.join(__dirname, nombreBackup);
+  
+  // Leer datos actuales y guardar copia
+  const datosActuales = leerDatos();
+  fs.writeFileSync(backupPath, JSON.stringify(datosActuales, null, 2));
+  
+  // Reiniciar datos
   guardarDatos({ referidos: [] });
-  res.json({ mensaje: 'Datos reiniciados correctamente' });
+  res.json({ 
+    mensaje: 'Datos reiniciados correctamente',
+    backup: nombreBackup
+  });
 });
 
 // Ruta principal

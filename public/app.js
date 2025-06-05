@@ -13,6 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Event listeners
   referidoForm.addEventListener('submit', agregarReferido);
   reiniciarBtn.addEventListener('click', reiniciarDatos);
+  
+  // Agregar botón de exportación
+  const exportarBtn = document.createElement('button');
+  exportarBtn.className = 'btn';
+  exportarBtn.style.marginLeft = '10px';
+  exportarBtn.textContent = 'Exportar a Excel';
+  exportarBtn.addEventListener('click', exportarDatos);
+  document.querySelector('.admin-controls').appendChild(exportarBtn);
 
   // Función para cargar referidos desde el servidor
   async function cargarReferidos() {
@@ -196,5 +204,49 @@ document.addEventListener('DOMContentLoaded', () => {
       // Agregar fila a la tabla
       referidosBody.appendChild(row);
     });
+  }
+  
+  // Función para exportar datos a Excel (CSV)
+  function exportarDatos() {
+    fetch('/api/referidos')
+      .then(response => response.json())
+      .then(referidos => {
+        if (referidos.length === 0) {
+          alert('No hay datos para exportar');
+          return;
+        }
+        
+        // Ordenar por cantidad (mayor a menor)
+        referidos.sort((a, b) => b.cantidad - a.cantidad);
+        
+        // Crear contenido CSV
+        let csvContent = 'Nombre,Referidos\n';
+        referidos.forEach(referido => {
+          csvContent += `${referido.nombre},${referido.cantidad}\n`;
+        });
+        
+        // Crear fecha para el nombre del archivo
+        const fecha = new Date();
+        const nombreArchivo = `Referidos_${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}.csv`;
+        
+        // Crear y descargar el archivo
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        // Crear URL para descargar
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', nombreArchivo);
+        link.style.visibility = 'hidden';
+        
+        // Agregar a DOM, hacer clic y eliminar
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch(error => {
+        console.error('Error al exportar datos:', error);
+        alert('Error al exportar datos');
+      });
   }
 });
