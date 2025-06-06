@@ -1,18 +1,18 @@
-// Archivo: config/passport.js
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const Usuario = require('../models/Usuario');
 
-console.log("Variables de entorno en passport.js:");
+// Determinar la URL de callback según el entorno
+const isProduction = process.env.NODE_ENV === 'production';
+const callbackURL = isProduction
+  ? 'https://dei-p8ny.onrender.com/auth/google/callback'
+  : 'http://localhost:3000/auth/google/callback';
+
+console.log("Configuración OAuth:");
+console.log("Entorno:", isProduction ? "Producción" : "Desarrollo");
 console.log("GOOGLE_CLIENT_ID disponible:", !!process.env.GOOGLE_CLIENT_ID);
 console.log("GOOGLE_CLIENT_SECRET disponible:", !!process.env.GOOGLE_CLIENT_SECRET);
-console.log("callbackURL:", "/auth/google/callback");
-
-// Añade este código de depuración
-console.log("Variables de entorno en passport.js:");
-console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET);
-
+console.log("callbackURL:", callbackURL);
 
 passport.serializeUser((usuario, done) => {
   done(null, usuario.id);
@@ -32,30 +32,35 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "https://dei-p8ny.onrender.com/auth/google/callback",
+      callbackURL: callbackURL,
       proxy: true
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log("Perfil de Google recibido:", profile.id, profile.displayName);
+        
         // Verificar si el usuario ya existe
         let usuario = await Usuario.findOne({ googleId: profile.id });
         
         if (usuario) {
-          // Usuario existente
+          console.log("Usuario existente encontrado:", usuario.email);
           return done(null, usuario);
         }
         
         // Crear nuevo usuario
+        console.log("Creando nuevo usuario:", profile.displayName);
         usuario = new Usuario({
           googleId: profile.id,
           nombre: profile.displayName,
-          email: profile.emails[0].value,
-          foto: profile.photos[0].value
+          email: profile.emails && profile.emails[0] ? profile.emails[0].value : '',
+          foto: profile.photos && profile.photos[0] ? profile.photos[0].value : ''
         });
         
         await usuario.save();
+        console.log("Nuevo usuario guardado:", usuario.id);
         return done(null, usuario);
       } catch (error) {
+        console.error("Error en autenticación:", error);
         return done(error, null);
       }
     }
@@ -63,3 +68,4 @@ passport.use(
 );
 
 module.exports = passport;
+
