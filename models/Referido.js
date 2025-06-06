@@ -41,6 +41,20 @@ const referidoSchema = new mongoose.Schema({
   fechaCierre: {
     type: Date,
     default: null
+  },
+  
+  // Información del cerrador
+  nombreCerrador: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  
+  // Información de la compañía
+  nombreCompania: {
+    type: String,
+    trim: true,
+    default: ''
   }
 });
 

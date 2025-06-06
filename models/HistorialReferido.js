@@ -37,6 +37,16 @@ const historialReferidoSchema = new mongoose.Schema({
     required: true,
     enum: ['linea', 'callback']
   },
+  nombreCerrador: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  nombreCompania: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   fechaArchivado: {
     type: Date,
     default: Date.now

@@ -147,6 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function registrarReferido(e) {
     e.preventDefault();
     
+    // Verificar si el usuario tiene permisos de administrador
+    if (window.esUsuarioAdmin === false) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
+    
     const nombreCliente = nombreClienteInput.value.trim();
     const nombreEmpleado = nombreEmpleadoInput.value.trim();
     const paisEmpleado = paisEmpleadoInput.value.trim();
@@ -171,6 +177,11 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       });
       
+      if (response.status === 403) {
+        alert('No tienes permisos para realizar esta acción');
+        return;
+      }
+      
       const referidos = await response.json();
       actualizarTablaPendientes(referidos);
       
@@ -188,13 +199,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Función para marcar un referido como cerrado
   async function cerrarReferido(id) {
+    // Verificar si el usuario tiene permisos de administrador
+    if (window.esUsuarioAdmin === false) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
+    
+    // Pedir el nombre del cerrador
+    const nombreCerrador = prompt('Ingrese el nombre de quien cerró el referido:');
+    if (!nombreCerrador) {
+      return; // Cancelado por el usuario
+    }
+    
+    // Pedir el nombre de la compañía
+    const nombreCompania = prompt('Ingrese el nombre de la compañía:');
+    if (nombreCompania === null) {
+      return; // Cancelado por el usuario
+    }
+    
     if (!confirm('¿Confirmar que este referido ha sido cerrado?')) {
       return;
     }
     
     try {
       const response = await fetch(`/api/referidos/${id}/cerrar`, {
-        method: 'PUT'
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nombreCerrador, nombreCompania })
       });
       
       const referidos = await response.json();
@@ -204,11 +237,20 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Referido marcado como cerrado correctamente');
     } catch (error) {
       console.error('Error al cerrar referido:', error);
+      if (error.status === 403) {
+        alert('No tienes permisos para realizar esta acción');
+      }
     }
   }
 
   // Función para eliminar un referido
   async function eliminarReferido(id) {
+    // Verificar si el usuario tiene permisos de administrador
+    if (window.esUsuarioAdmin === false) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
+    
     if (!confirm('¿Estás seguro de eliminar este referido? Esta acción no se puede deshacer.')) {
       return;
     }
@@ -223,6 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Referido eliminado correctamente');
     } catch (error) {
       console.error('Error al eliminar referido:', error);
+      if (error.status === 403) {
+        alert('No tienes permisos para realizar esta acción');
+      }
     }
   }
 
@@ -251,6 +296,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Función para reiniciar datos
   async function reiniciarDatos() {
+    // Verificar si el usuario tiene permisos de administrador
+    if (window.esUsuarioAdmin === false) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
+    
     if (!confirm('¿Estás seguro de reiniciar los datos de referidos cerrados? Los datos se guardarán en el historial.')) {
       return;
     }
@@ -265,6 +316,9 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Datos de referidos cerrados reiniciados correctamente y guardados en historial');
     } catch (error) {
       console.error('Error al reiniciar datos:', error);
+      if (error.status === 403) {
+        alert('No tienes permisos para realizar esta acción');
+      }
     }
   }
 
@@ -309,18 +363,25 @@ document.addEventListener('DOMContentLoaded', () => {
       // Columna de acciones
       const accionesCell = document.createElement('td');
       
-      const cerrarBtn = document.createElement('button');
-      cerrarBtn.className = 'action-btn cerrar';
-      cerrarBtn.textContent = 'Cerrar';
-      cerrarBtn.addEventListener('click', () => cerrarReferido(referido._id));
-      
-      const eliminarBtn = document.createElement('button');
-      eliminarBtn.className = 'action-btn';
-      eliminarBtn.textContent = 'Eliminar';
-      eliminarBtn.addEventListener('click', () => eliminarReferido(referido._id));
-      
-      accionesCell.appendChild(cerrarBtn);
-      accionesCell.appendChild(eliminarBtn);
+      // Solo mostrar botones de acción si el usuario es administrador
+      if (window.esUsuarioAdmin !== false) {
+        const cerrarBtn = document.createElement('button');
+        cerrarBtn.className = 'action-btn cerrar';
+        cerrarBtn.textContent = 'Cerrar';
+        cerrarBtn.addEventListener('click', () => cerrarReferido(referido._id));
+        
+        const eliminarBtn = document.createElement('button');
+        eliminarBtn.className = 'action-btn';
+        eliminarBtn.textContent = 'Eliminar';
+        eliminarBtn.addEventListener('click', () => eliminarReferido(referido._id));
+        
+        accionesCell.appendChild(cerrarBtn);
+        accionesCell.appendChild(eliminarBtn);
+      } else {
+        accionesCell.textContent = 'No disponible';
+        accionesCell.style.color = '#999';
+        accionesCell.style.fontStyle = 'italic';
+      }
       
       // Agregar celdas a la fila
       row.appendChild(clienteCell);
@@ -380,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 5;
+      cell.colSpan = 7; // Aumentado a 7 para incluir la columna del cerrador y compañía
       cell.textContent = 'No hay referidos cerrados en este mes';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -407,6 +468,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const fechaCierreCell = document.createElement('td');
       fechaCierreCell.textContent = referido.fechaCierre ? new Date(referido.fechaCierre).toLocaleDateString() : 'N/A';
       
+      // Columna de cerrador
+      const cerradorCell = document.createElement('td');
+      cerradorCell.textContent = referido.nombreCerrador || 'No especificado';
+      
+      // Columna de compañía
+      const companiaCell = document.createElement('td');
+      companiaCell.textContent = referido.nombreCompania || 'No especificada';
+      
       // Columna de tipo
       const tipoCell = document.createElement('td');
       tipoCell.textContent = referido.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
@@ -416,6 +485,8 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(empleadoCell);
       row.appendChild(fechaEnvioCell);
       row.appendChild(fechaCierreCell);
+      row.appendChild(cerradorCell);
+      row.appendChild(companiaCell);
       row.appendChild(tipoCell);
       
       // Agregar fila a la tabla
@@ -468,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 5;
+      cell.colSpan = 7; // Aumentado a 7 para incluir la columna del cerrador y compañía
       cell.textContent = 'No hay datos históricos para el período seleccionado';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -495,6 +566,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const fechaCierreCell = document.createElement('td');
       fechaCierreCell.textContent = new Date(referido.fechaCierre).toLocaleDateString();
       
+      // Columna de cerrador
+      const cerradorCell = document.createElement('td');
+      cerradorCell.textContent = referido.nombreCerrador || 'No especificado';
+      
+      // Columna de compañía
+      const companiaCell = document.createElement('td');
+      companiaCell.textContent = referido.nombreCompania || 'No especificada';
+      
       // Columna de tipo
       const tipoCell = document.createElement('td');
       tipoCell.textContent = referido.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
@@ -504,6 +583,8 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(empleadoCell);
       row.appendChild(fechaEnvioCell);
       row.appendChild(fechaCierreCell);
+      row.appendChild(cerradorCell);
+      row.appendChild(companiaCell);
       row.appendChild(tipoCell);
       
       // Agregar fila a la tabla
@@ -596,15 +677,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             csvContent += '\nDETALLE DE REFERIDOS CERRADOS\n';
-            csvContent += 'Cliente,Empleado,País,Fecha de Envío,Fecha de Cierre,Tipo\n';
+            csvContent += 'Cliente,Empleado,País,Fecha de Envío,Fecha de Cierre,Cerrado por,Compañía,Tipo\n';
             
             detalles.forEach(detalle => {
               const fechaEnvio = new Date(detalle.fechaEnvio).toLocaleDateString();
               const fechaCierre = detalle.fechaCierre ? new Date(detalle.fechaCierre).toLocaleDateString() : 'N/A';
               const tipo = detalle.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
               const pais = detalle.paisEmpleado || '';
+              const cerrador = detalle.nombreCerrador || 'No especificado';
+              const compania = detalle.nombreCompania || 'No especificada';
               
-              csvContent += `${detalle.nombreCliente},${detalle.nombreEmpleado},${pais},${fechaEnvio},${fechaCierre},${tipo}\n`;
+              csvContent += `${detalle.nombreCliente},${detalle.nombreEmpleado},${pais},${fechaEnvio},${fechaCierre},${cerrador},${compania},${tipo}\n`;
             });
             
             // Crear fecha para el nombre del archivo
@@ -674,14 +757,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Detalle de referidos
         csvContent += '\nDETALLE DE REFERIDOS\n';
-        csvContent += 'Cliente,Empleado,País,Fecha de Envío,Fecha de Cierre,Tipo\n';
+        csvContent += 'Cliente,Empleado,País,Fecha de Envío,Fecha de Cierre,Cerrado por,Compañía,Tipo\n';
         
         data.detalle.forEach(detalle => {
           const fechaEnvio = new Date(detalle.fechaEnvio).toLocaleDateString();
           const fechaCierre = new Date(detalle.fechaCierre).toLocaleDateString();
           const tipo = detalle.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
+          const cerrador = detalle.nombreCerrador || 'No especificado';
+          const compania = detalle.nombreCompania || 'No especificada';
           
-          csvContent += `${detalle.nombreCliente},${detalle.nombreEmpleado},${detalle.paisEmpleado},${fechaEnvio},${fechaCierre},${tipo}\n`;
+          csvContent += `${detalle.nombreCliente},${detalle.nombreEmpleado},${detalle.paisEmpleado},${fechaEnvio},${fechaCierre},${cerrador},${compania},${tipo}\n`;
         });
         
         // Crear nombre del archivo

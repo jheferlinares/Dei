@@ -2,9 +2,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const dotenv = require('dotenv');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const passport = require('./config/passport');
 const conectarDB = require('./config/db');
 const Referido = require('./models/Referido');
 const HistorialReferido = require('./models/HistorialReferido');
+const Configuracion = require('./models/Configuracion');
+const authRoutes = require('./routes/auth');
+const { estaAutenticado, puedeEditar } = require('./middleware/auth');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -18,6 +24,30 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(bodyParser.json());
 app.use(express.static('public'));
+
+// Configuración de sesión
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'secreto-desarrollo',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({ 
+    mongoUrl: process.env.MONGODB_URI,
+    collectionName: 'sesiones'
+  }),
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 // 1 día
+  }
+}));
+
+// Inicializar Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Rutas de autenticación
+app.use('/auth', authRoutes);
+
+// Rutas de configuración
+app.use('/api/configuracion', require('./routes/config'));
 
 // Rutas API
 
@@ -167,8 +197,8 @@ app.get('/api/referidos/pendientes', async (req, res) => {
   }
 });
 
-// Agregar un nuevo referido
-app.post('/api/referidos', async (req, res) => {
+// Agregar un nuevo referido (requiere autenticación y permisos de edición)
+app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
   const { nombreCliente, nombreEmpleado, paisEmpleado, tipoEnvio } = req.body;
   
   if (!nombreCliente || !nombreEmpleado || !paisEmpleado) {
@@ -196,9 +226,10 @@ app.post('/api/referidos', async (req, res) => {
   }
 });
 
-// Marcar un referido como cerrado
-app.put('/api/referidos/:id/cerrar', async (req, res) => {
+// Marcar un referido como cerrado (requiere autenticación y permisos de edición)
+app.put('/api/referidos/:id/cerrar', estaAutenticado, puedeEditar, async (req, res) => {
   const id = req.params.id;
+  const { nombreCerrador, nombreCompania } = req.body;
   
   try {
     const referido = await Referido.findById(id);
@@ -210,6 +241,8 @@ app.put('/api/referidos/:id/cerrar', async (req, res) => {
     // Marcar como cerrado y establecer fecha de cierre
     referido.cerrado = true;
     referido.fechaCierre = new Date();
+    referido.nombreCerrador = nombreCerrador || req.user.nombre;
+    referido.nombreCompania = nombreCompania || '';
     await referido.save();
     
     const referidosPendientes = await Referido.find({ cerrado: false }).sort({ fechaEnvio: -1 });
@@ -220,8 +253,8 @@ app.put('/api/referidos/:id/cerrar', async (req, res) => {
   }
 });
 
-// Eliminar un referido
-app.delete('/api/referidos/:id', async (req, res) => {
+// Eliminar un referido (requiere autenticación y permisos de edición)
+app.delete('/api/referidos/:id', estaAutenticado, puedeEditar, async (req, res) => {
   const id = req.params.id;
   
   try {
@@ -235,8 +268,8 @@ app.delete('/api/referidos/:id', async (req, res) => {
   }
 });
 
-// Reiniciar datos (para cambio de mes)
-app.post('/api/reiniciar', async (req, res) => {
+// Reiniciar datos (para cambio de mes) (requiere autenticación y permisos de edición)
+app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
   try {
     // Obtener todos los referidos cerrados
     const referidosCerrados = await Referido.find({ cerrado: true });
@@ -257,7 +290,9 @@ app.post('/api/reiniciar', async (req, res) => {
         paisEmpleado: referido.paisEmpleado,
         fechaEnvio: referido.fechaEnvio,
         fechaCierre: referido.fechaCierre,
-        tipoEnvio: referido.tipoEnvio
+        tipoEnvio: referido.tipoEnvio,
+        nombreCerrador: referido.nombreCerrador || '',
+        nombreCompania: referido.nombreCompania || ''
       }).save();
     }
     
@@ -296,8 +331,16 @@ app.get('/api/referidos/buscar', async (req, res) => {
   }
 });
 
-// Ruta principal
-app.get('/', (req, res) => {
+// Ruta de login
+app.get('/login', (req, res) => {
+  if (req.isAuthenticated()) {
+    return res.redirect('/');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Ruta principal (protegida)
+app.get('/', estaAutenticado, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control de Referidos</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/styles-extra.css">
 </head>
 <body>
   <div class="container">
@@ -83,7 +85,10 @@
       </div>
       
       <div class="results-container">
-        <h2>Referidos Cerrados del Mes</h2>
+        <div class="header-with-actions">
+          <h2>Referidos Cerrados del <span id="nombreMesActual">Mes</span></h2>
+          <button id="editarMesBtn" class="btn btn-small">Editar Mes</button>
+        </div>
         <div class="stats-container">
           <div class="stat-box">
             <div class="stat-value" id="totalCerrados">0</div>
@@ -116,6 +121,8 @@
                 <th>Empleado</th>
                 <th>Fecha de Envío</th>
                 <th>Fecha de Cierre</th>
+                <th>Cerrado por</th>
+                <th>Compañía</th>
                 <th>Tipo</th>
               </tr>
             </thead>
@@ -192,6 +199,8 @@
                 <th>Empleado</th>
                 <th>Fecha de Envío</th>
                 <th>Fecha de Cierre</th>
+                <th>Cerrado por</th>
+                <th>Compañía</th>
                 <th>Tipo</th>
               </tr>
             </thead>
@@ -202,6 +211,28 @@
     </div>
   </div>
 
+  <!-- Modal para editar mes -->
+  <div id="editarMesModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Editar Mes Actual</h3>
+        <span class="close-modal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="nombreMesInput">Nombre del Mes:</label>
+          <input type="text" id="nombreMesInput" placeholder="Ej: Enero 2024">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="guardarMesBtn" class="btn">Guardar</button>
+        <button id="cancelarMesBtn" class="btn" style="background-color: #7f8c8d;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
