@@ -1,109 +1,193 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv');
+const conectarDB = require('./config/db');
+const Referido = require('./models/Referido');
+
+// Cargar variables de entorno
+dotenv.config();
+
+// Conectar a MongoDB
+conectarDB();
+
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Ruta al archivo de datos
-const dataPath = path.join(__dirname, 'data.json');
-
-// Inicializar archivo de datos si no existe
-if (!fs.existsSync(dataPath)) {
-  fs.writeFileSync(dataPath, JSON.stringify({ referidos: [] }));
-}
-
-// Leer datos
-function leerDatos() {
-  const rawData = fs.readFileSync(dataPath);
-  return JSON.parse(rawData);
-}
-
-// Guardar datos
-function guardarDatos(data) {
-  fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-}
-
 // Rutas API
-// Obtener todos los referidos
-app.get('/api/referidos', (req, res) => {
-  const data = leerDatos();
-  res.json(data.referidos);
+
+// Obtener todos los referidos (cerrados y no cerrados)
+app.get('/api/referidos/todos', async (req, res) => {
+  try {
+    const referidos = await Referido.find({}).sort({ fechaEnvio: -1 });
+    res.json(referidos);
+  } catch (error) {
+    console.error('Error al obtener referidos:', error);
+    res.status(500).json({ error: 'Error al obtener referidos' });
+  }
 });
 
-// Agregar un referido
-app.post('/api/referidos', (req, res) => {
-  const { nombre, cantidad } = req.body;
+// Obtener solo referidos cerrados (para el gráfico)
+app.get('/api/referidos/cerrados', async (req, res) => {
+  try {
+    const referidos = await Referido.find({ cerrado: true });
+    
+    // Agrupar por empleado para el contador
+    const referidosPorEmpleado = [];
+    const empleadosMap = {};
+    
+    referidos.forEach(referido => {
+      const { nombreEmpleado } = referido;
+      
+      if (empleadosMap[nombreEmpleado]) {
+        empleadosMap[nombreEmpleado].cantidad += 1;
+      } else {
+        empleadosMap[nombreEmpleado] = {
+          _id: referido._id,
+          nombreEmpleado,
+          cantidad: 1
+        };
+        referidosPorEmpleado.push(empleadosMap[nombreEmpleado]);
+      }
+    });
+    
+    res.json(referidosPorEmpleado);
+  } catch (error) {
+    console.error('Error al obtener referidos cerrados:', error);
+    res.status(500).json({ error: 'Error al obtener referidos cerrados' });
+  }
+});
+
+// Obtener detalle de referidos cerrados
+app.get('/api/referidos/cerrados/detalle', async (req, res) => {
+  try {
+    const referidos = await Referido.find({ cerrado: true }).sort({ fechaCierre: -1 });
+    res.json(referidos);
+  } catch (error) {
+    console.error('Error al obtener detalle de referidos cerrados:', error);
+    res.status(500).json({ error: 'Error al obtener detalle de referidos cerrados' });
+  }
+});
+
+// Obtener referidos pendientes (no cerrados)
+app.get('/api/referidos/pendientes', async (req, res) => {
+  try {
+    const referidos = await Referido.find({ cerrado: false }).sort({ fechaEnvio: -1 });
+    res.json(referidos);
+  } catch (error) {
+    console.error('Error al obtener referidos pendientes:', error);
+    res.status(500).json({ error: 'Error al obtener referidos pendientes' });
+  }
+});
+
+// Agregar un nuevo referido
+app.post('/api/referidos', async (req, res) => {
+  const { nombreCliente, nombreEmpleado, paisEmpleado, tipoEnvio } = req.body;
   
-  if (!nombre || cantidad === undefined) {
-    return res.status(400).json({ error: 'Se requiere nombre y cantidad' });
+  if (!nombreCliente || !nombreEmpleado || !paisEmpleado) {
+    return res.status(400).json({ error: 'Se requieren todos los campos' });
   }
 
-  const data = leerDatos();
-  
-  // Buscar si ya existe el trabajador
-  const trabajadorIndex = data.referidos.findIndex(t => t.nombre.toLowerCase() === nombre.toLowerCase());
-  
-  if (trabajadorIndex >= 0) {
-    // Actualizar cantidad de referidos
-    data.referidos[trabajadorIndex].cantidad += parseInt(cantidad);
-  } else {
-    // Agregar nuevo trabajador
-    data.referidos.push({
-      id: Date.now().toString(),
-      nombre,
-      cantidad: parseInt(cantidad)
+  try {
+    // Crear nuevo referido
+    const nuevoReferido = new Referido({
+      nombreCliente,
+      nombreEmpleado,
+      paisEmpleado,
+      tipoEnvio: tipoEnvio || 'linea',
+      fechaEnvio: new Date(),
+      cerrado: false
     });
+    
+    await nuevoReferido.save();
+    
+    const referidos = await Referido.find({ cerrado: false }).sort({ fechaEnvio: -1 });
+    res.status(201).json(referidos);
+  } catch (error) {
+    console.error('Error al agregar referido:', error);
+    res.status(500).json({ error: 'Error al agregar referido' });
   }
+});
+
+// Marcar un referido como cerrado
+app.put('/api/referidos/:id/cerrar', async (req, res) => {
+  const id = req.params.id;
   
-  guardarDatos(data);
-  res.status(201).json(data.referidos);
+  try {
+    const referido = await Referido.findById(id);
+    
+    if (!referido) {
+      return res.status(404).json({ error: 'Referido no encontrado' });
+    }
+    
+    // Marcar como cerrado y establecer fecha de cierre
+    referido.cerrado = true;
+    referido.fechaCierre = new Date();
+    await referido.save();
+    
+    const referidosPendientes = await Referido.find({ cerrado: false }).sort({ fechaEnvio: -1 });
+    res.json(referidosPendientes);
+  } catch (error) {
+    console.error('Error al cerrar referido:', error);
+    res.status(500).json({ error: 'Error al cerrar referido' });
+  }
 });
 
 // Eliminar un referido
-app.delete('/api/referidos/:id', (req, res) => {
-  const data = leerDatos();
+app.delete('/api/referidos/:id', async (req, res) => {
   const id = req.params.id;
   
-  const trabajadorIndex = data.referidos.findIndex(t => t.id === id);
-  
-  if (trabajadorIndex === -1) {
-    return res.status(404).json({ error: 'Trabajador no encontrado' });
+  try {
+    await Referido.findByIdAndDelete(id);
+    
+    const referidos = await Referido.find({}).sort({ fechaEnvio: -1 });
+    res.json(referidos);
+  } catch (error) {
+    console.error('Error al eliminar referido:', error);
+    res.status(500).json({ error: 'Error al eliminar referido' });
   }
-  
-  // Eliminar un referido
-  if (data.referidos[trabajadorIndex].cantidad > 1) {
-    data.referidos[trabajadorIndex].cantidad -= 1;
-  } else {
-    // Si solo queda un referido, eliminar el trabajador
-    data.referidos.splice(trabajadorIndex, 1);
-  }
-  
-  guardarDatos(data);
-  res.json(data.referidos);
 });
 
 // Reiniciar datos (para cambio de mes)
-app.post('/api/reiniciar', (req, res) => {
-  // Crear copia de seguridad antes de reiniciar
-  const fecha = new Date();
-  const nombreBackup = `backup_${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}.json`;
-  const backupPath = path.join(__dirname, nombreBackup);
+app.post('/api/reiniciar', async (req, res) => {
+  try {
+    // Eliminar solo los referidos cerrados
+    await Referido.deleteMany({ cerrado: true });
+    
+    res.json({ 
+      mensaje: 'Datos de referidos cerrados reiniciados correctamente'
+    });
+  } catch (error) {
+    console.error('Error al reiniciar datos:', error);
+    res.status(500).json({ error: 'Error al reiniciar datos' });
+  }
+});
+
+// Buscar referidos por nombre de cliente o empleado
+app.get('/api/referidos/buscar', async (req, res) => {
+  const { termino } = req.query;
   
-  // Leer datos actuales y guardar copia
-  const datosActuales = leerDatos();
-  fs.writeFileSync(backupPath, JSON.stringify(datosActuales, null, 2));
+  if (!termino) {
+    return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
+  }
   
-  // Reiniciar datos
-  guardarDatos({ referidos: [] });
-  res.json({ 
-    mensaje: 'Datos reiniciados correctamente',
-    backup: nombreBackup
-  });
+  try {
+    const referidos = await Referido.find({
+      $or: [
+        { nombreCliente: { $regex: termino, $options: 'i' } },
+        { nombreEmpleado: { $regex: termino, $options: 'i' } }
+      ]
+    }).sort({ fechaEnvio: -1 });
+    
+    res.json(referidos);
+  } catch (error) {
+    console.error('Error al buscar referidos:', error);
+    res.status(500).json({ error: 'Error al buscar referidos' });
+  }
 });
 
 // Ruta principal

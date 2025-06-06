@@ -3,46 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Concurso de Referidos</title>
+  <title>Control de Referidos</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
-    <h1>Concurso de referidos</h1>
+    <h1>Control de Referidos</h1>
     
-    <div class="form-container">
-      <h2>Agregar Referidos</h2>
-      <form id="referidoForm">
-        <div class="form-group">
-          <label for="nombre">Nombre del empleado:</label>
-          <input type="text" id="nombre" required>
-        </div>
-        <div class="form-group">
-          <label for="cantidad">Cantidad de Referidos:</label>
-          <input type="number" id="cantidad" min="1" value="1" required>
-        </div>
-        <button type="submit" class="btn">Agregar</button>
-      </form>
-    </div>
-
-    <div class="admin-controls">
-      <button id="reiniciarBtn" class="btn btn-danger">Reiniciar Datos (Nuevo Mes)</button>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="pendientes">Referidos Pendientes</button>
+      <button class="tab-btn" data-tab="cerrados">Referidos Cerrados</button>
     </div>
     
-    <div class="results-container">
-      <h2>Referidos del Mes de Junio</h2>
-      <div class="chart-container" id="chartContainer"></div>
-      <div class="table-container">
-        <table id="referidosTable">
-          <thead>
-            <tr>
-              <th>Trabajador</th>
-              <th>Referidos</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="referidosBody"></tbody>
-        </table>
+    <!-- Tab de Referidos Pendientes -->
+    <div class="tab-content active" id="pendientes-tab">
+      <div class="form-container">
+        <h2>Registrar Nuevo Referido</h2>
+        <form id="nuevoReferidoForm">
+          <div class="form-group">
+            <label for="nombreCliente">Nombre del Cliente:</label>
+            <input type="text" id="nombreCliente" required>
+          </div>
+          <div class="form-group">
+            <label for="nombreEmpleado">Nombre del Empleado:</label>
+            <input type="text" id="nombreEmpleado" required>
+          </div>
+          <div class="form-group">
+            <label for="paisEmpleado">País del Empleado:</label>
+            <input type="text" id="paisEmpleado" required>
+          </div>
+          <div class="form-group">
+            <label>Tipo de Envío:</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="tipoEnvio" value="linea" checked> En Línea
+              </label>
+              <label>
+                <input type="radio" name="tipoEnvio" value="callback"> Callback
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="btn">Registrar Referido</button>
+        </form>
+      </div>
+      
+      <div class="search-container">
+        <h2>Buscar Referidos</h2>
+        <div class="search-form">
+          <input type="text" id="searchInput" placeholder="Buscar por nombre de cliente o empleado...">
+          <button id="searchBtn" class="btn">Buscar</button>
+        </div>
+      </div>
+      
+      <div class="results-container">
+        <h2>Referidos Pendientes</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Empleado</th>
+                <th>País</th>
+                <th>Fecha Envío</th>
+                <th>Tipo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="pendientesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tab de Referidos Cerrados -->
+    <div class="tab-content" id="cerrados-tab">
+      <div class="admin-controls">
+        <button id="reiniciarBtn" class="btn btn-danger">Reiniciar Datos (Nuevo Mes)</button>
+      </div>
+      
+      <div class="results-container">
+        <h2>Referidos Cerrados del Mes</h2>
+        <div class="chart-container" id="chartContainer"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Empleado</th>
+                <th>Referidos Cerrados</th>
+              </tr>
+            </thead>
+            <tbody id="cerradosBody"></tbody>
+          </table>
+        </div>
+        
+        <h3 style="margin-top: 30px;">Detalle de Referidos Cerrados</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Empleado</th>
+                <th>Fecha de Envío</th>
+                <th>Fecha de Cierre</th>
+                <th>Tipo</th>
+              </tr>
+            </thead>
+            <tbody id="cerradosDetalleBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

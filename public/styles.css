@@ -28,7 +28,43 @@ h2 {
   color: #3498db;
 }
 
-.form-container {
+/* Tabs */
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ddd;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  color: #777;
+  transition: all 0.3s;
+}
+
+.tab-btn:hover {
+  color: #3498db;
+}
+
+.tab-btn.active {
+  color: #3498db;
+  border-bottom: 3px solid #3498db;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Formularios */
+.form-container, .search-container {
   background-color: white;
   padding: 20px;
   border-radius: 5px;
@@ -54,6 +90,33 @@ input {
   font-size: 16px;
 }
 
+.radio-group {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.radio-group input {
+  width: auto;
+  margin-right: 5px;
+}
+
+.search-form {
+  display: flex;
+  gap: 10px;
+}
+
+.search-form input {
+  flex: 1;
+}
+
+/* Botones */
 .btn {
   display: inline-block;
   background-color: #3498db;
@@ -78,11 +141,20 @@ input {
   background-color: #c0392b;
 }
 
+.btn-success {
+  background-color: #2ecc71;
+}
+
+.btn-success:hover {
+  background-color: #27ae60;
+}
+
 .admin-controls {
   text-align: right;
   margin-bottom: 20px;
 }
 
+/* Resultados */
 .results-container {
   background-color: white;
   padding: 20px;
@@ -133,6 +205,11 @@ input {
   text-overflow: ellipsis;
 }
 
+/* Tablas */
+.table-container {
+  overflow-x: auto;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -156,8 +233,17 @@ th {
   padding: 5px 10px;
   border-radius: 3px;
   cursor: pointer;
+  margin-right: 5px;
 }
 
 .action-btn:hover {
   background-color: #c0392b;
+}
+
+.action-btn.cerrar {
+  background-color: #2ecc71;
+}
+
+.action-btn.cerrar:hover {
+  background-color: #27ae60;
 }
