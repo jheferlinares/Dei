@@ -1,0 +1,46 @@
+const mongoose = require('mongoose');
+
+const historialReferidoSchema = new mongoose.Schema({
+  mes: {
+    type: Number,
+    required: true
+  },
+  año: {
+    type: Number,
+    required: true
+  },
+  nombreCliente: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  nombreEmpleado: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  paisEmpleado: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  fechaEnvio: {
+    type: Date,
+    required: true
+  },
+  fechaCierre: {
+    type: Date,
+    required: true
+  },
+  tipoEnvio: {
+    type: String,
+    required: true,
+    enum: ['linea', 'callback']
+  },
+  fechaArchivado: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('HistorialReferido', historialReferidoSchema);

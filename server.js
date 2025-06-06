@@ -4,6 +4,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const conectarDB = require('./config/db');
 const Referido = require('./models/Referido');
+const HistorialReferido = require('./models/HistorialReferido');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -62,6 +63,44 @@ app.get('/api/referidos/cerrados', async (req, res) => {
   }
 });
 
+// Obtener estadísticas generales
+app.get('/api/estadisticas', async (req, res) => {
+  try {
+    // Contar referidos cerrados
+    const totalCerrados = await Referido.countDocuments({ cerrado: true });
+    
+    // Contar todos los referidos (enviados)
+    const totalEnviados = await Referido.countDocuments();
+    
+    res.json({
+      totalCerrados,
+      totalEnviados
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    res.status(500).json({ error: 'Error al obtener estadísticas' });
+  }
+});
+
+// Obtener estadísticas generales
+app.get('/api/estadisticas', async (req, res) => {
+  try {
+    // Contar referidos cerrados
+    const totalCerrados = await Referido.countDocuments({ cerrado: true });
+    
+    // Contar todos los referidos (enviados)
+    const totalEnviados = await Referido.countDocuments();
+    
+    res.json({
+      totalCerrados,
+      totalEnviados
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    res.status(500).json({ error: 'Error al obtener estadísticas' });
+  }
+});
+
 // Obtener detalle de referidos cerrados
 app.get('/api/referidos/cerrados/detalle', async (req, res) => {
   try {
@@ -70,6 +109,50 @@ app.get('/api/referidos/cerrados/detalle', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener detalle de referidos cerrados:', error);
     res.status(500).json({ error: 'Error al obtener detalle de referidos cerrados' });
+  }
+});
+
+// Obtener historial de referidos por mes y año
+app.get('/api/historial', async (req, res) => {
+  try {
+    const { mes, año } = req.query;
+    
+    let consulta = {};
+    if (mes !== undefined && año !== undefined) {
+      consulta = { mes: parseInt(mes), año: parseInt(año) };
+    } else if (mes !== undefined) {
+      consulta = { mes: parseInt(mes) };
+    } else if (año !== undefined) {
+      consulta = { año: parseInt(año) };
+    }
+    
+    const historial = await HistorialReferido.find(consulta).sort({ fechaCierre: -1 });
+    
+    // Agrupar por empleado para estadísticas
+    const empleadosMap = {};
+    historial.forEach(referido => {
+      const { nombreEmpleado } = referido;
+      
+      if (empleadosMap[nombreEmpleado]) {
+        empleadosMap[nombreEmpleado].cantidad += 1;
+      } else {
+        empleadosMap[nombreEmpleado] = {
+          nombreEmpleado,
+          cantidad: 1
+        };
+      }
+    });
+    
+    const resumenEmpleados = Object.values(empleadosMap);
+    
+    res.json({
+      detalle: historial,
+      resumen: resumenEmpleados,
+      total: historial.length
+    });
+  } catch (error) {
+    console.error('Error al obtener historial:', error);
+    res.status(500).json({ error: 'Error al obtener historial' });
   }
 });
 
@@ -155,11 +238,34 @@ app.delete('/api/referidos/:id', async (req, res) => {
 // Reiniciar datos (para cambio de mes)
 app.post('/api/reiniciar', async (req, res) => {
   try {
+    // Obtener todos los referidos cerrados
+    const referidosCerrados = await Referido.find({ cerrado: true });
+    
+    // Guardar en historial antes de eliminar
+    const HistorialReferido = require('./models/HistorialReferido');
+    const fecha = new Date();
+    const mes = fecha.getMonth();
+    const año = fecha.getFullYear();
+    
+    // Guardar cada referido en el historial
+    for (const referido of referidosCerrados) {
+      await new HistorialReferido({
+        mes,
+        año,
+        nombreCliente: referido.nombreCliente,
+        nombreEmpleado: referido.nombreEmpleado,
+        paisEmpleado: referido.paisEmpleado,
+        fechaEnvio: referido.fechaEnvio,
+        fechaCierre: referido.fechaCierre,
+        tipoEnvio: referido.tipoEnvio
+      }).save();
+    }
+    
     // Eliminar solo los referidos cerrados
     await Referido.deleteMany({ cerrado: true });
     
     res.json({ 
-      mensaje: 'Datos de referidos cerrados reiniciados correctamente'
+      mensaje: 'Datos de referidos cerrados reiniciados correctamente y guardados en historial'
     });
   } catch (error) {
     console.error('Error al reiniciar datos:', error);

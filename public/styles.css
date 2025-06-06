@@ -28,6 +28,11 @@ h2 {
   color: #3498db;
 }
 
+h3 {
+  margin-bottom: 15px;
+  color: #2980b9;
+}
+
 /* Tabs */
 .tabs {
   display: flex;
@@ -82,7 +87,7 @@ label {
   font-weight: bold;
 }
 
-input {
+input, select {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -110,10 +115,12 @@ input {
 .search-form {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-.search-form input {
+.search-form input, .search-form .form-group {
   flex: 1;
+  min-width: 200px;
 }
 
 /* Botones */
@@ -154,12 +161,43 @@ input {
   margin-bottom: 20px;
 }
 
+/* Estadísticas */
+.stats-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.stat-box {
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  padding: 15px;
+  text-align: center;
+  min-width: 200px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-left: 5px solid #3498db;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
 /* Resultados */
 .results-container {
   background-color: white;
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
 .chart-container {
@@ -171,6 +209,7 @@ input {
   gap: 20px;
   padding: 20px 0;
   border-bottom: 2px solid #ddd;
+  flex-wrap: wrap;
 }
 
 .chart-bar {
@@ -178,6 +217,7 @@ input {
   flex-direction: column;
   align-items: center;
   width: 80px;
+  margin-bottom: 10px;
 }
 
 .bar {
@@ -208,6 +248,7 @@ input {
 /* Tablas */
 .table-container {
   overflow-x: auto;
+  margin-bottom: 20px;
 }
 
 table {
