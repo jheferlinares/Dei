@@ -1,7 +1,9 @@
+const dotenv = require('dotenv');
+// Cargar variables de entorno
+dotenv.config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const dotenv = require('dotenv');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('./config/passport');
@@ -12,8 +14,7 @@ const Configuracion = require('./models/Configuracion');
 const authRoutes = require('./routes/auth');
 const { estaAutenticado, puedeEditar } = require('./middleware/auth');
 
-// Cargar variables de entorno
-dotenv.config();
+
 
 // Conectar a MongoDB
 conectarDB();

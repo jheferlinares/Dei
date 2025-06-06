@@ -1,6 +1,18 @@
+// Archivo: config/passport.js
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const Usuario = require('../models/Usuario');
+
+console.log("Variables de entorno en passport.js:");
+console.log("GOOGLE_CLIENT_ID disponible:", !!process.env.GOOGLE_CLIENT_ID);
+console.log("GOOGLE_CLIENT_SECRET disponible:", !!process.env.GOOGLE_CLIENT_SECRET);
+console.log("callbackURL:", "/auth/google/callback");
+
+// Añade este código de depuración
+console.log("Variables de entorno en passport.js:");
+console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+console.log("GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET);
+
 
 passport.serializeUser((usuario, done) => {
   done(null, usuario.id);
@@ -20,7 +32,8 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: '/auth/google/callback',
+      callbackURL: "/auth/google/callback",
+      callbackURL: "http://localhost:3000/auth/google/callback",
       proxy: true
     },
     async (accessToken, refreshToken, profile, done) => {
