@@ -1,0 +1,119 @@
+/* Estilos responsivos para dispositivos móviles */
+@media screen and (max-width: 768px) {
+  .container {
+    padding: 10px;
+    max-width: 100%;
+  }
+  
+  .tabs {
+    flex-wrap: wrap;
+  }
+  
+  .tab-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    flex-grow: 1;
+  }
+  
+  .form-container, .search-container, .results-container {
+    padding: 15px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+  }
+  
+  .search-form input, .search-form .form-group {
+    min-width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .stats-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .stat-box {
+    width: 100%;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  table {
+    min-width: 600px;
+  }
+  
+  .admin-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .admin-controls button, .filtro-container {
+    width: 100%;
+    margin: 5px 0 !important;
+  }
+  
+  .filtro-container {
+    display: flex !important;
+    flex-direction: column;
+  }
+  
+  .filtro-container label {
+    margin-bottom: 5px;
+  }
+  
+  .chart-container {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 40px;
+  }
+  
+  /* Ajustes para la barra de usuario */
+  .user-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+  }
+  
+  .user-avatar {
+    margin-bottom: 10px;
+  }
+  
+  .user-name, .user-role {
+    margin: 5px 0;
+  }
+  
+  /* Ajustes para las barras del gráfico */
+  .chart-bar {
+    margin: 0 1px;
+  }
+  
+  .bar-label {
+    font-size: 9px;
+  }
+}
+
+/* Estilos específicos para pantallas muy pequeñas */
+@media screen and (max-width: 480px) {
+  h1 {
+    font-size: 24px;
+  }
+  
+  h2 {
+    font-size: 20px;
+  }
+  
+  .btn {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  
+  .tab-btn {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+}

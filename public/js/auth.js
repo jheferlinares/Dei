@@ -1,16 +1,32 @@
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    // Obtener información del usuario actual
-    const response = await fetch('/auth/usuario-actual');
-    const usuario = await response.json();
+    // Verificar si estamos en localhost
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    if (usuario) {
-      // Usuario autenticado
-      mostrarInfoUsuario(usuario);
-      configurarPermisos(usuario);
+    if (isLocalhost) {
+      console.log('Entorno local detectado: configurando permisos de administrador');
+      // En localhost, crear un usuario ficticio con rol de administrador
+      const usuarioLocal = {
+        nombre: 'Usuario Local',
+        email: 'local@example.com',
+        rol: 'admin',
+        foto: 'https://via.placeholder.com/40'
+      };
+      mostrarInfoUsuario(usuarioLocal);
+      configurarPermisos(usuarioLocal);
     } else {
-      // No autenticado, redirigir a login
-      window.location.href = '/login';
+      // En producción, verificar autenticación normalmente
+      const response = await fetch('/auth/usuario-actual');
+      const usuario = await response.json();
+      
+      if (usuario) {
+        // Usuario autenticado
+        mostrarInfoUsuario(usuario);
+        configurarPermisos(usuario);
+      } else {
+        // No autenticado, redirigir a login
+        window.location.href = '/login';
+      }
     }
   } catch (error) {
     console.error('Error al verificar autenticación:', error);
@@ -60,7 +76,9 @@ function mostrarInfoUsuario(usuario) {
 
 // Configurar permisos según el rol del usuario
 function configurarPermisos(usuario) {
-  const esAdmin = usuario.rol === 'admin';
+  // En localhost, siempre dar permisos de administrador
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const esAdmin = isLocalhost ? true : (usuario && usuario.rol === 'admin');
   
   // Elementos que solo los administradores pueden usar
   const elementosAdmin = [

@@ -1,3 +1,4 @@
+// models/HistorialReferido.js
 const mongoose = require('mongoose');
 
 const historialReferidoSchema = new mongoose.Schema({
@@ -36,6 +37,12 @@ const historialReferidoSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: ['linea', 'callback']
+  },
+  tipoProducto: {
+    type: String,
+    required: true,
+    enum: ['vida', 'casa', 'auto', 'comercial', 'salud'],
+    default: 'vida'
   },
   nombreCerrador: {
     type: String,

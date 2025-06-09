@@ -1,3 +1,16 @@
+// Función auxiliar para obtener nombre legible del producto
+function obtenerNombreProducto(tipo) {
+  const productos = {
+    'vida': 'Vida',
+    'casa': 'Casa',
+    'auto': 'Auto',
+    'comercial': 'Comercial',
+    'salud': 'Salud',
+    'concurso': 'Concurso (Casa, Auto, Comercial)'
+  };
+  return productos[tipo] || tipo || 'Vida';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Referencias a elementos del DOM
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -6,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nombreClienteInput = document.getElementById('nombreCliente');
   const nombreEmpleadoInput = document.getElementById('nombreEmpleado');
   const paisEmpleadoInput = document.getElementById('paisEmpleado');
+  const tipoProductoSelect = document.getElementById('tipoProducto');
   const pendientesBody = document.getElementById('pendientesBody');
   const cerradosBody = document.getElementById('cerradosBody');
   const cerradosDetalleBody = document.getElementById('cerradosDetalleBody');
@@ -19,8 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const historialMesSelect = document.getElementById('historialMes');
   const historialAñoSelect = document.getElementById('historialAño');
   const consultarHistorialBtn = document.getElementById('consultarHistorialBtn');
+
   const exportarHistorialBtn = document.getElementById('exportarHistorialBtn');
 
+  
   // Establecer año actual en el selector
   const añoActual = new Date().getFullYear();
   const añoOption = historialAñoSelect.querySelector(`option[value="${añoActual}"]`);
@@ -79,7 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Función para cargar referidos pendientes
   async function cargarReferidosPendientes() {
     try {
-      const response = await fetch('/api/referidos/pendientes');
+      // Obtener el tipo de producto seleccionado (si existe el selector)
+      const tipoProductoSelect = document.getElementById('filtroTipoProducto');
+      const tipoProducto = tipoProductoSelect ? tipoProductoSelect.value : 'todos';
+      
+      const response = await fetch(`/api/referidos/pendientes?tipoProducto=${tipoProducto}`);
       const referidos = await response.json();
       actualizarTablaPendientes(referidos);
     } catch (error) {
@@ -90,24 +110,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // Función para cargar referidos cerrados
   async function cargarReferidosCerrados() {
     try {
+      // Obtener el tipo de producto seleccionado
+      const tipoProductoSelect = document.getElementById('filtroTipoProducto');
+      const tipoProducto = tipoProductoSelect ? tipoProductoSelect.value : 'todos';
+      
       // Cargar resumen para el gráfico
-      const response = await fetch('/api/referidos/cerrados');
+      const response = await fetch(`/api/referidos/cerrados?tipoProducto=${tipoProducto}`);
       const referidos = await response.json();
       actualizarTablaCerrados(referidos);
       actualizarGrafico(referidos, chartContainer);
       
       // Cargar detalle de referidos cerrados
-      const detalleResponse = await fetch('/api/referidos/cerrados/detalle');
+      const detalleResponse = await fetch(`/api/referidos/cerrados/detalle?tipoProducto=${tipoProducto}`);
       const referidosDetalle = await detalleResponse.json();
       actualizarTablaCerradosDetalle(referidosDetalle);
       
       // Cargar estadísticas generales
-      const estadisticasResponse = await fetch('/api/estadisticas');
+      const estadisticasResponse = await fetch(`/api/estadisticas?tipoProducto=${tipoProducto}`);
       const estadisticas = await estadisticasResponse.json();
       
       // Actualizar contadores
       document.getElementById('totalCerrados').textContent = estadisticas.totalCerrados;
       document.getElementById('totalEnviados').textContent = estadisticas.totalEnviados;
+      
+      // Actualizar título con el tipo de producto
+      const nombreProducto = obtenerNombreProducto(tipoProducto);
+      const tituloProducto = tipoProducto === 'todos' ? '' : ` - ${nombreProducto}`;
+      document.getElementById('nombreMesActual').textContent = `Mes${tituloProducto}`;
     } catch (error) {
       console.error('Error al cargar referidos cerrados:', error);
     }
@@ -157,7 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const nombreEmpleado = nombreEmpleadoInput.value.trim();
     const paisEmpleado = paisEmpleadoInput.value.trim();
     const tipoEnvio = document.querySelector('input[name="tipoEnvio"]:checked').value;
-    
+    const tipoProducto = document.getElementById('tipoProducto').value;
+
     if (!nombreCliente || !nombreEmpleado || !paisEmpleado) {
       alert('Por favor completa todos los campos');
       return;
@@ -173,7 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
           nombreCliente,
           nombreEmpleado,
           paisEmpleado,
-          tipoEnvio
+          tipoEnvio,
+          tipoProducto
         })
       });
       
@@ -329,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 6;
+      cell.colSpan = 7; // Aumentado a 7 para incluir la columna de producto
       cell.textContent = 'No hay referidos pendientes';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -360,6 +391,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const tipoCell = document.createElement('td');
       tipoCell.textContent = referido.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
       
+      // Columna de producto
+      const productoCell = document.createElement('td');
+      productoCell.textContent = obtenerNombreProducto(referido.tipoProducto);
+      
       // Columna de acciones
       const accionesCell = document.createElement('td');
       
@@ -389,6 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(paisCell);
       row.appendChild(fechaCell);
       row.appendChild(tipoCell);
+      row.appendChild(productoCell);
       row.appendChild(accionesCell);
       
       // Agregar fila a la tabla
@@ -441,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 7; // Aumentado a 7 para incluir la columna del cerrador y compañía
+      cell.colSpan = 8; // Aumentado a 8 para incluir la columna del producto
       cell.textContent = 'No hay referidos cerrados en este mes';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -480,6 +516,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const tipoCell = document.createElement('td');
       tipoCell.textContent = referido.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
       
+      // Columna de producto
+      const productoCell = document.createElement('td');
+      productoCell.textContent = obtenerNombreProducto(referido.tipoProducto);
+      
       // Agregar celdas a la fila
       row.appendChild(clienteCell);
       row.appendChild(empleadoCell);
@@ -488,6 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(cerradorCell);
       row.appendChild(companiaCell);
       row.appendChild(tipoCell);
+      row.appendChild(productoCell);
       
       // Agregar fila a la tabla
       cerradosDetalleBody.appendChild(row);
@@ -539,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 7; // Aumentado a 7 para incluir la columna del cerrador y compañía
+      cell.colSpan = 8; // Aumentado a 8 para incluir la columna del producto
       cell.textContent = 'No hay datos históricos para el período seleccionado';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -578,6 +619,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const tipoCell = document.createElement('td');
       tipoCell.textContent = referido.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
       
+      // Columna de producto
+      const productoCell = document.createElement('td');
+      productoCell.textContent = obtenerNombreProducto(referido.tipoProducto);
+      
       // Agregar celdas a la fila
       row.appendChild(clienteCell);
       row.appendChild(empleadoCell);
@@ -586,6 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(cerradorCell);
       row.appendChild(companiaCell);
       row.appendChild(tipoCell);
+      row.appendChild(productoCell);
       
       // Agregar fila a la tabla
       historialDetalleBody.appendChild(row);
@@ -652,8 +698,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Función para exportar datos actuales a Excel
   function exportarDatos() {
+    // Obtener el tipo de producto seleccionado
+    const tipoProductoSelect = document.getElementById('filtroTipoProducto');
+    const tipoProducto = tipoProductoSelect ? tipoProductoSelect.value : 'todos';
+    
     // Primero obtenemos el resumen por empleado
-    fetch('/api/referidos/cerrados')
+    fetch(`/api/referidos/cerrados?tipoProducto=${tipoProducto}`)
       .then(response => response.json())
       .then(referidos => {
         if (referidos.length === 0) {
@@ -662,7 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Luego obtenemos el detalle de los referidos cerrados
-        fetch('/api/referidos/cerrados/detalle')
+        fetch(`/api/referidos/cerrados/detalle?tipoProducto=${tipoProducto}`)
           .then(response => response.json())
           .then(detalles => {
             // Ordenar por cantidad (mayor a menor)
@@ -677,7 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             csvContent += '\nDETALLE DE REFERIDOS CERRADOS\n';
-            csvContent += 'Cliente,Empleado,País,Fecha de Envío,Fecha de Cierre,Cerrado por,Compañía,Tipo\n';
+            csvContent += 'Cliente,Empleado,País,Fecha de Envío,Fecha de Cierre,Cerrado por,Compañía,Tipo,Producto\n';
             
             detalles.forEach(detalle => {
               const fechaEnvio = new Date(detalle.fechaEnvio).toLocaleDateString();
@@ -686,8 +736,9 @@ document.addEventListener('DOMContentLoaded', () => {
               const pais = detalle.paisEmpleado || '';
               const cerrador = detalle.nombreCerrador || 'No especificado';
               const compania = detalle.nombreCompania || 'No especificada';
+              const producto = obtenerNombreProducto(detalle.tipoProducto);
               
-              csvContent += `${detalle.nombreCliente},${detalle.nombreEmpleado},${pais},${fechaEnvio},${fechaCierre},${cerrador},${compania},${tipo}\n`;
+              csvContent += `${detalle.nombreCliente},${detalle.nombreEmpleado},${pais},${fechaEnvio},${fechaCierre},${cerrador},${compania},${tipo},${producto}\n`;
             });
             
             // Crear fecha para el nombre del archivo
@@ -757,7 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Detalle de referidos
         csvContent += '\nDETALLE DE REFERIDOS\n';
-        csvContent += 'Cliente,Empleado,País,Fecha de Envío,Fecha de Cierre,Cerrado por,Compañía,Tipo\n';
+        csvContent += 'Cliente,Empleado,País,Fecha de Envío,Fecha de Cierre,Cerrado por,Compañía,Tipo,Producto\n';
         
         data.detalle.forEach(detalle => {
           const fechaEnvio = new Date(detalle.fechaEnvio).toLocaleDateString();
@@ -765,8 +816,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const tipo = detalle.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
           const cerrador = detalle.nombreCerrador || 'No especificado';
           const compania = detalle.nombreCompania || 'No especificada';
+          const producto = obtenerNombreProducto(detalle.tipoProducto);
           
-          csvContent += `${detalle.nombreCliente},${detalle.nombreEmpleado},${detalle.paisEmpleado},${fechaEnvio},${fechaCierre},${cerrador},${compania},${tipo}\n`;
+          csvContent += `${detalle.nombreCliente},${detalle.nombreEmpleado},${detalle.paisEmpleado},${fechaEnvio},${fechaCierre},${cerrador},${compania},${tipo},${producto}\n`;
         });
         
         // Crear nombre del archivo
@@ -805,11 +857,54 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.removeChild(link);
   }
   
-  // Agregar botón de exportación
+  // Crear selector de tipo de producto para filtrar
+  const filtroContainer = document.createElement('div');
+  filtroContainer.className = 'filtro-container';
+  filtroContainer.style.display = 'inline-block';
+  filtroContainer.style.marginRight = '10px';
+  
+  const filtroLabel = document.createElement('label');
+  filtroLabel.textContent = 'Filtrar por producto: ';
+  filtroLabel.style.marginRight = '5px';
+  
+  const filtroSelect = document.createElement('select');
+  filtroSelect.id = 'filtroTipoProducto';
+  filtroSelect.style.padding = '5px';
+  filtroSelect.style.borderRadius = '4px';
+  
+  // Opciones del selector
+  const opciones = [
+    { value: 'todos', text: 'Todos los productos' },
+    { value: 'vida', text: 'Vida' },
+    { value: 'concurso', text: 'Concurso (Casa, Auto, Comercial)' },
+    { value: 'salud', text: 'Salud' }
+    // Opciones individuales comentadas para posible uso futuro
+    // { value: 'casa', text: 'Casa' },
+    // { value: 'auto', text: 'Auto' },
+    // { value: 'comercial', text: 'Comercial' },
+  ];
+  
+  opciones.forEach(opcion => {
+    const option = document.createElement('option');
+    option.value = opcion.value;
+    option.textContent = opcion.text;
+    filtroSelect.appendChild(option);
+  });
+  
+  // Evento de cambio
+  filtroSelect.addEventListener('change', cargarReferidosCerrados);
+  
+  filtroContainer.appendChild(filtroLabel);
+  filtroContainer.appendChild(filtroSelect);
+  
+  // Agregar selector y botón de exportación
+  const adminControls = document.querySelector('.admin-controls');
+  adminControls.appendChild(filtroContainer);
+  
   const exportarBtn = document.createElement('button');
   exportarBtn.className = 'btn';
   exportarBtn.style.marginLeft = '10px';
   exportarBtn.textContent = 'Exportar a Excel';
   exportarBtn.addEventListener('click', exportarDatos);
-  document.querySelector('.admin-controls').appendChild(exportarBtn);
+  adminControls.appendChild(exportarBtn);
 });

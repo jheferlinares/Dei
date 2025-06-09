@@ -2,11 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Control de Referidos</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/styles-extra.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/mobile-fixes.css">
 </head>
 <body>
   <div class="container">
@@ -23,6 +25,18 @@
       <div class="form-container">
         <h2>Registrar Nuevo Referido</h2>
         <form id="nuevoReferidoForm">
+          
+          <div class="form-group">
+            <label for="tipoProducto">Tipo de Producto:</label>
+            <select id="tipoProducto" required>
+              <option value="vida">Vida</option>
+              <option value="casa">Casa</option>
+              <option value="auto">Auto</option>
+              <option value="comercial">Comercial</option>
+              <option value="salud">Salud</option>
+            </select>
+          </div>
+
           <div class="form-group">
             <label for="nombreCliente">Nombre del Cliente:</label>
             <input type="text" id="nombreCliente" required>
@@ -69,6 +83,7 @@
                 <th>País</th>
                 <th>Fecha Envío</th>
                 <th>Tipo</th>
+                <th>Producto</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -124,6 +139,7 @@
                 <th>Cerrado por</th>
                 <th>Compañía</th>
                 <th>Tipo</th>
+                <th>Producto</th>
               </tr>
             </thead>
             <tbody id="cerradosDetalleBody"></tbody>
@@ -202,6 +218,7 @@
                 <th>Cerrado por</th>
                 <th>Compañía</th>
                 <th>Tipo</th>
+                <th>Producto</th>
               </tr>
             </thead>
             <tbody id="historialDetalleBody"></tbody>

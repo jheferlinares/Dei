@@ -1,0 +1,66 @@
+/* Correcciones específicas para problemas en dispositivos móviles */
+
+/* Evitar que las tablas se desborden */
+.table-container {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Para mejor desplazamiento en iOS */
+}
+
+/* Hacer que las celdas de tabla se ajusten mejor */
+@media screen and (max-width: 480px) {
+  th, td {
+    padding: 8px 5px;
+    font-size: 12px;
+  }
+  
+  /* Ocultar algunas columnas menos importantes en pantallas muy pequeñas */
+  .hide-on-mobile {
+    display: none;
+  }
+  
+  /* Ajustar el tamaño de los botones de acción */
+  .action-btn {
+    padding: 3px 6px;
+    font-size: 11px;
+    margin-right: 2px;
+  }
+}
+
+/* Mejorar la visualización de formularios */
+@media screen and (max-width: 768px) {
+  input, select {
+    font-size: 16px; /* Evita el zoom automático en iOS */
+  }
+  
+  .form-group {
+    margin-bottom: 10px;
+  }
+  
+  /* Hacer que los botones sean más fáciles de tocar */
+  .btn {
+    min-height: 44px; /* Tamaño mínimo recomendado para elementos táctiles */
+  }
+  
+  /* Mejorar la visualización del filtro */
+  #filtroTipoProducto {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+/* Ajustes para la orientación horizontal */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .container {
+    padding: 5px;
+  }
+  
+  h1 {
+    margin-bottom: 10px;
+  }
+  
+  .form-container, .search-container, .results-container {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+}

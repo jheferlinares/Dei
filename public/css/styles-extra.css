@@ -1,14 +1,58 @@
-/* Estilos adicionales */
-.header-with-actions {
+/* Estilos adicionales para mejorar la interfaz */
+
+/* Estilos para la información del usuario */
+.user-info {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.btn-small {
-  padding: 5px 10px;
-  font-size: 14px;
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.user-name {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.user-role {
+  background-color: #e0e0e0;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-right: 15px;
+}
+
+.user-role.admin {
+  background-color: #3498db;
+  color: white;
+}
+
+.logout-btn {
+  margin-left: auto;
+  color: #e74c3c;
+  text-decoration: none;
+}
+
+.logout-btn:hover {
+  text-decoration: underline;
+}
+
+/* Mensaje informativo */
+.info-message {
+  background-color: #f8f9fa;
+  border-left: 4px solid #3498db;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  color: #2c3e50;
 }
 
 /* Estilos para el modal */
@@ -20,31 +64,29 @@
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0,0,0,0.5);
 }
 
 .modal-content {
   background-color: white;
-  margin: 15% auto;
-  padding: 20px;
-  border-radius: 5px;
-  width: 80%;
+  margin: 10% auto;
+  padding: 0;
+  width: 50%;
   max-width: 500px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .modal-header {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
 }
 
 .modal-title {
   margin: 0;
-  font-size: 18px;
   color: #2c3e50;
 }
 
@@ -55,16 +97,41 @@
   color: #7f8c8d;
 }
 
-.close-modal:hover {
-  color: #e74c3c;
-}
-
 .modal-body {
-  margin-bottom: 20px;
+  padding: 15px;
 }
 
 .modal-footer {
-  text-align: right;
+  padding: 15px;
   border-top: 1px solid #ddd;
-  padding-top: 15px;
+  text-align: right;
+}
+
+.btn-small {
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+.header-with-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Mejoras para tablas en dispositivos móviles */
+@media screen and (max-width: 768px) {
+  .modal-content {
+    width: 90%;
+    margin: 20% auto;
+  }
+  
+  .header-with-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-with-actions button {
+    margin-top: 10px;
+  }
 }

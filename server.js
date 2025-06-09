@@ -66,7 +66,32 @@ app.get('/api/referidos/todos', async (req, res) => {
 // Obtener solo referidos cerrados (para el gráfico)
 app.get('/api/referidos/cerrados', async (req, res) => {
   try {
-    const referidos = await Referido.find({ cerrado: true });
+    const tipoProducto = req.query.tipoProducto || 'todos';
+    
+    // Filtrar por tipo de producto si se especifica
+    let filtro = { cerrado: true };
+    
+    // NUEVO: Agrupar casa, auto y comercial como un solo tipo para el concurso
+    if (tipoProducto === 'concurso') {
+      filtro.$or = [
+        { tipoProducto: 'casa' },
+        { tipoProducto: 'auto' },
+        { tipoProducto: 'comercial' }
+      ];
+    } else if (tipoProducto !== 'todos') {
+      // Para manejar referidos antiguos que no tienen tipoProducto definido
+      if (tipoProducto === 'vida') {
+        filtro.$or = [
+          { tipoProducto: 'vida' },
+          { tipoProducto: { $exists: false } } // Incluir documentos sin el campo tipoProducto
+        ];
+      } else {
+        filtro.tipoProducto = tipoProducto;
+      }
+    }
+    
+    console.log('Filtro para referidos cerrados:', filtro);
+    const referidos = await Referido.find(filtro);
     
     // Agrupar por empleado para el contador
     const referidosPorEmpleado = [];
@@ -81,7 +106,8 @@ app.get('/api/referidos/cerrados', async (req, res) => {
         empleadosMap[nombreEmpleado] = {
           _id: referido._id,
           nombreEmpleado,
-          cantidad: 1
+          cantidad: 1,
+          tipoProducto: tipoProducto === 'concurso' ? 'concurso' : referido.tipoProducto
         };
         referidosPorEmpleado.push(empleadosMap[nombreEmpleado]);
       }
@@ -97,32 +123,51 @@ app.get('/api/referidos/cerrados', async (req, res) => {
 // Obtener estadísticas generales
 app.get('/api/estadisticas', async (req, res) => {
   try {
+    const tipoProducto = req.query.tipoProducto || 'todos';
+    
+    // Filtrar por tipo de producto si se especifica
+    let filtroCerrados = { cerrado: true };
+    let filtroEnviados = {};
+    
+    // NUEVO: Agrupar casa, auto y comercial como un solo tipo para el concurso
+    if (tipoProducto === 'concurso') {
+      filtroCerrados.$or = [
+        { tipoProducto: 'casa' },
+        { tipoProducto: 'auto' },
+        { tipoProducto: 'comercial' }
+      ];
+      filtroEnviados.$or = [
+        { tipoProducto: 'casa' },
+        { tipoProducto: 'auto' },
+        { tipoProducto: 'comercial' }
+      ];
+    } else if (tipoProducto !== 'todos') {
+      // Para manejar referidos antiguos que no tienen tipoProducto definido
+      if (tipoProducto === 'vida') {
+        filtroCerrados.$or = [
+          { tipoProducto: 'vida' },
+          { tipoProducto: { $exists: false } } // Incluir documentos sin el campo tipoProducto
+        ];
+        filtroEnviados.$or = [
+          { tipoProducto: 'vida' },
+          { tipoProducto: { $exists: false } } // Incluir documentos sin el campo tipoProducto
+        ];
+      } else {
+        filtroCerrados.tipoProducto = tipoProducto;
+        filtroEnviados.tipoProducto = tipoProducto;
+      }
+    }
+    
     // Contar referidos cerrados
-    const totalCerrados = await Referido.countDocuments({ cerrado: true });
+    const totalCerrados = await Referido.countDocuments(filtroCerrados);
     
     // Contar todos los referidos (enviados)
-    const totalEnviados = await Referido.countDocuments();
+    const totalEnviados = await Referido.countDocuments(filtroEnviados);
+    
+    console.log('Estadísticas calculadas:', { tipoProducto, totalCerrados, totalEnviados });
     
     res.json({
-      totalCerrados,
-      totalEnviados
-    });
-  } catch (error) {
-    console.error('Error al obtener estadísticas:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
-  }
-});
-
-// Obtener estadísticas generales
-app.get('/api/estadisticas', async (req, res) => {
-  try {
-    // Contar referidos cerrados
-    const totalCerrados = await Referido.countDocuments({ cerrado: true });
-    
-    // Contar todos los referidos (enviados)
-    const totalEnviados = await Referido.countDocuments();
-    
-    res.json({
+      tipoProducto,
       totalCerrados,
       totalEnviados
     });
@@ -135,7 +180,31 @@ app.get('/api/estadisticas', async (req, res) => {
 // Obtener detalle de referidos cerrados
 app.get('/api/referidos/cerrados/detalle', async (req, res) => {
   try {
-    const referidos = await Referido.find({ cerrado: true }).sort({ fechaCierre: -1 });
+    const tipoProducto = req.query.tipoProducto || 'todos';
+    
+    // Filtrar por tipo de producto si se especifica
+    let filtro = { cerrado: true };
+    
+    // NUEVO: Agrupar casa, auto y comercial como un solo tipo para el concurso
+    if (tipoProducto === 'concurso') {
+      filtro.$or = [
+        { tipoProducto: 'casa' },
+        { tipoProducto: 'auto' },
+        { tipoProducto: 'comercial' }
+      ];
+    } else if (tipoProducto !== 'todos') {
+      // Para manejar referidos antiguos que no tienen tipoProducto definido
+      if (tipoProducto === 'vida') {
+        filtro.$or = [
+          { tipoProducto: 'vida' },
+          { tipoProducto: { $exists: false } } // Incluir documentos sin el campo tipoProducto
+        ];
+      } else {
+        filtro.tipoProducto = tipoProducto;
+      }
+    }
+    
+    const referidos = await Referido.find(filtro).sort({ fechaCierre: -1 });
     res.json(referidos);
   } catch (error) {
     console.error('Error al obtener detalle de referidos cerrados:', error);
@@ -190,7 +259,23 @@ app.get('/api/historial', async (req, res) => {
 // Obtener referidos pendientes (no cerrados)
 app.get('/api/referidos/pendientes', async (req, res) => {
   try {
-    const referidos = await Referido.find({ cerrado: false }).sort({ fechaEnvio: -1 });
+    const tipoProducto = req.query.tipoProducto || 'todos';
+    
+    // Filtrar por tipo de producto si se especifica
+    let filtro = { cerrado: false };
+    
+    // NUEVO: Agrupar casa, auto y comercial como un solo tipo para el concurso
+    if (tipoProducto === 'concurso') {
+      filtro.$or = [
+        { tipoProducto: 'casa' },
+        { tipoProducto: 'auto' },
+        { tipoProducto: 'comercial' }
+      ];
+    } else if (tipoProducto !== 'todos') {
+      filtro.tipoProducto = tipoProducto;
+    }
+    
+    const referidos = await Referido.find(filtro).sort({ fechaEnvio: -1 });
     res.json(referidos);
   } catch (error) {
     console.error('Error al obtener referidos pendientes:', error);
@@ -200,7 +285,7 @@ app.get('/api/referidos/pendientes', async (req, res) => {
 
 // Agregar un nuevo referido (requiere autenticación y permisos de edición)
 app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
-  const { nombreCliente, nombreEmpleado, paisEmpleado, tipoEnvio } = req.body;
+  const { nombreCliente, nombreEmpleado, paisEmpleado, tipoEnvio, tipoProducto } = req.body;
   
   if (!nombreCliente || !nombreEmpleado || !paisEmpleado) {
     return res.status(400).json({ error: 'Se requieren todos los campos' });
@@ -213,6 +298,7 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
       nombreEmpleado,
       paisEmpleado,
       tipoEnvio: tipoEnvio || 'linea',
+      tipoProducto: tipoProducto || 'vida',
       fechaEnvio: new Date(),
       cerrado: false
     });
@@ -227,24 +313,44 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
   }
 });
 
+
 // Marcar un referido como cerrado (requiere autenticación y permisos de edición)
 app.put('/api/referidos/:id/cerrar', estaAutenticado, puedeEditar, async (req, res) => {
   const id = req.params.id;
   const { nombreCerrador, nombreCompania } = req.body;
   
   try {
+    console.log('Cerrando referido con ID:', id);
+    console.log('Datos recibidos:', { nombreCerrador, nombreCompania });
+    
     const referido = await Referido.findById(id);
     
     if (!referido) {
+      console.error('Referido no encontrado con ID:', id);
       return res.status(404).json({ error: 'Referido no encontrado' });
     }
+    
+    console.log('Referido encontrado:', referido);
     
     // Marcar como cerrado y establecer fecha de cierre
     referido.cerrado = true;
     referido.fechaCierre = new Date();
-    referido.nombreCerrador = nombreCerrador || req.user.nombre;
+    referido.nombreCerrador = nombreCerrador || (req.user ? req.user.nombre : 'Usuario Local');
     referido.nombreCompania = nombreCompania || '';
-    await referido.save();
+    
+    console.log('Guardando referido con datos actualizados:', {
+      cerrado: referido.cerrado,
+      fechaCierre: referido.fechaCierre,
+      nombreCerrador: referido.nombreCerrador,
+      nombreCompania: referido.nombreCompania
+    });
+    
+    const referidoGuardado = await referido.save();
+    console.log('Referido guardado correctamente:', referidoGuardado);
+    
+    // Verificar que el referido se guardó correctamente
+    const referidoVerificado = await Referido.findById(id);
+    console.log('Verificación del referido guardado:', referidoVerificado);
     
     const referidosPendientes = await Referido.find({ cerrado: false }).sort({ fechaEnvio: -1 });
     res.json(referidosPendientes);
@@ -292,6 +398,7 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
         fechaEnvio: referido.fechaEnvio,
         fechaCierre: referido.fechaCierre,
         tipoEnvio: referido.tipoEnvio,
+        tipoProducto: referido.tipoProducto || 'vida',
         nombreCerrador: referido.nombreCerrador || '',
         nombreCompania: referido.nombreCompania || ''
       }).save();

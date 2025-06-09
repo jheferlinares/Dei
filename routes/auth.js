@@ -10,9 +10,26 @@ router.get('/google', passport.authenticate('google', {
 
 // Callback después de la autenticación con Google
 router.get('/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  (req, res) => {
-    res.redirect('/');
+  (req, res, next) => {
+    passport.authenticate('google', (err, user, info) => {
+      if (err) {
+        console.error('Error en autenticación Google:', err);
+        return res.redirect('/login?error=' + encodeURIComponent(err.message));
+      }
+      
+      if (!user) {
+        console.error('No se pudo autenticar usuario');
+        return res.redirect('/login?error=auth-failed');
+      }
+      
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('Error en login:', err);
+          return res.redirect('/login?error=' + encodeURIComponent(err.message));
+        }
+        return res.redirect('/');
+      });
+    })(req, res, next);
   }
 );
 

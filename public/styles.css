@@ -206,22 +206,25 @@ input, select {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 20px;
+  gap: 5px;
   padding: 20px 0;
   border-bottom: 2px solid #ddd;
   flex-wrap: wrap;
+  overflow-x: auto;
 }
 
 .chart-bar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 80px;
+  width: 40px;
   margin-bottom: 10px;
+  margin-right: 2px;
+  margin-left: 2px;
 }
 
 .bar {
-  width: 60px;
+  width: 30px;
   background-color: #3498db;
   border-radius: 5px 5px 0 0;
   transition: height 0.5s;
@@ -230,19 +233,22 @@ input, select {
 
 .bar-value {
   position: absolute;
-  top: -25px;
+  top: -20px;
   width: 100%;
   text-align: center;
   font-weight: bold;
+  font-size: 12px;
 }
 
 .bar-label {
   margin-top: 10px;
   text-align: center;
   font-weight: bold;
-  max-width: 80px;
+  max-width: 40px;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 10px;
+  transform: rotate(-45deg);
 }
 
 /* Tablas */
