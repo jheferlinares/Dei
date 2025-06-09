@@ -660,6 +660,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Altura máxima de las barras en píxeles
     const maxHeight = 250;
     
+    // Colores predefinidos para tipos de productos
+    const coloresPorTipo = {
+      'vida': 'hsl(210, 70%, 60%)', // Azul
+      'concurso': 'hsl(120, 70%, 60%)', // Verde
+      'casa': 'hsl(30, 70%, 60%)', // Naranja
+      'auto': 'hsl(60, 70%, 60%)', // Amarillo
+      'comercial': 'hsl(270, 70%, 60%)', // Púrpura
+      'salud': 'hsl(0, 70%, 60%)' // Rojo
+    };
+    
     referidos.forEach(referido => {
       // Crear contenedor de la barra
       const barContainer = document.createElement('div');
@@ -673,9 +683,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const height = (referido.cantidad / maxCantidad) * maxHeight;
       bar.style.height = `${height}px`;
       
-      // Color aleatorio para la barra
-      const hue = Math.floor(Math.random() * 360);
-      bar.style.backgroundColor = `hsl(${hue}, 70%, 60%)`;
+      // Usar color predefinido según tipo o generar uno aleatorio
+      const tipoProducto = referido.tipoProducto || 'vida';
+      const color = coloresPorTipo[tipoProducto] || `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
+      bar.style.backgroundColor = color;
       
       // Valor en la parte superior de la barra
       const barValue = document.createElement('div');
@@ -686,6 +697,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Etiqueta debajo de la barra
       const barLabel = document.createElement('div');
       barLabel.className = 'bar-label';
+      
+      // Usar nombre completo
       barLabel.textContent = referido.nombreEmpleado;
       barLabel.title = referido.nombreEmpleado; // Para mostrar nombre completo al pasar el mouse
       

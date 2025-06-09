@@ -1,0 +1,59 @@
+/* Estilos específicos para gráficos en dispositivos móviles */
+
+@media screen and (max-width: 768px) {
+  .chart-container {
+    min-height: 250px;
+    padding: 15px 0;
+  }
+  
+  .chart-bar {
+    width: 25px;
+    margin-right: 1px;
+    margin-left: 1px;
+  }
+  
+  .bar {
+    width: 18px;
+    border-radius: 3px 3px 0 0;
+  }
+  
+  .bar-value {
+    top: -15px;
+    font-size: 9px;
+  }
+  
+  .bar-label {
+    margin-top: 6px;
+    max-width: 25px;
+    font-size: 4.5px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .chart-container {
+    min-height: 200px;
+    padding: 10px 0;
+  }
+  
+  .chart-bar {
+    width: 20px;
+    margin-right: 0;
+    margin-left: 0;
+  }
+  
+  .bar {
+    width: 11px;
+    border-radius: 2px 2px 0 0;
+  }
+  
+  .bar-value {
+    top: -12px;
+    font-size: 8px;
+  }
+  
+  .bar-label {
+    margin-top: 5px;
+    max-width: 20px;
+    font-size: 4.5px;
+  }
+}
