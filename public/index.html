@@ -10,10 +10,14 @@
   <link rel="stylesheet" href="css/responsive.css">
   <link rel="stylesheet" href="css/mobile-fixes.css">
   <link rel="stylesheet" href="css/mobile-chart.css">
+  <link rel="stylesheet" href="css/logo.css">
 </head>
 <body>
   <div class="container">
-    <h1>Control de Referidos</h1>
+    <div class="header-with-logo">
+      <img src="images/logo.png" alt="Logo Empresa" class="company-logo">
+      <h1>Control de Referidos</h1>
+    </div>
     
     <div class="tabs">
       <button class="tab-btn active" data-tab="pendientes">Referidos Pendientes</button>
@@ -102,7 +106,10 @@
       
       <div class="results-container">
         <div class="header-with-actions">
-          <h2>Referidos Cerrados de <span id="nombreMesActual">Mes</span></h2>
+          <div class="header-with-logo chart-header">
+            <img src="images/logo.png" alt="Logo Empresa" class="chart-logo">
+            <h2>Referidos Cerrados de <span id="nombreMesActual">Mes</span></h2>
+          </div>
           <button id="editarMesBtn" class="btn btn-small">Editar Mes</button>
         </div>
         <div class="stats-container">
@@ -187,7 +194,10 @@
       </div>
       
       <div class="results-container">
-        <h2>Resumen de Referidos Históricos</h2>
+        <div class="header-with-logo chart-header">
+          <img src="images/logo.png" alt="Logo Empresa" class="chart-logo">
+          <h2>Resumen de Referidos Históricos</h2>
+        </div>
         <div class="stats-container">
           <div class="stat-box">
             <div class="stat-value" id="totalHistorialCerrados">0</div>
