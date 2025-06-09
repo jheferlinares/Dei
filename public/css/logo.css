@@ -26,12 +26,12 @@
 /* Ajustes responsivos para el logo */
 @media screen and (max-width: 768px) {
   .company-logo {
-    height: 40px;
+    height: 50px;
     margin-right: 10px;
   }
   
   .chart-logo {
-    height: 25px;
+    height: 35px;
     margin-right: 8px;
   }
 }
@@ -42,7 +42,7 @@
   }
   
   .company-logo {
-    height: 35px;
+    height: 50px;
     margin-right: 0;
     margin-bottom: 10px;
   }
@@ -52,7 +52,7 @@
   }
   
   .chart-logo {
-    height: 20px;
+    height: 50px;
     margin-right: 5px;
     margin-bottom: 0;
   }
