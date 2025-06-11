@@ -1,0 +1,8 @@
+/* Corrección para las etiquetas de los gráficos */
+.bar-label {
+  font-size: 9px !important;
+  bottom: -40px !important;
+  position: absolute !important;
+  margin-top: 0 !important;
+  transform: rotate(-45deg) !important;
+}

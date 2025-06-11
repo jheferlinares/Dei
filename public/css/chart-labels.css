@@ -1,0 +1,45 @@
+/* Estilos específicos para mejorar las etiquetas de los gráficos */
+
+/* Ajustes para las etiquetas de las barras */
+.bar-label {
+  font-size: 11px !important;
+  font-weight: bold;
+  color: #333;
+  text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.5);
+  width: 90px !important;
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin-top: 10px !important;
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+
+/* Ajustes para el contenedor de las barras */
+.chart-bar {
+  position: relative;
+  margin-bottom: 35px !important;
+  height: auto !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Ajustes para el contenedor del gráfico */
+.chart-container {
+  padding-bottom: 50px !important;
+  margin-bottom: 30px !important;
+}
+
+/* Ajustes responsivos */
+@media screen and (max-width: 768px) {
+  .bar-label {
+    font-size: 10px !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .bar-label {
+    font-size: 9px !important;
+  }
+}

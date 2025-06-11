@@ -133,10 +133,27 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('totalCerrados').textContent = estadisticas.totalCerrados;
       document.getElementById('totalEnviados').textContent = estadisticas.totalEnviados;
       
-      // Actualizar título con el tipo de producto
+      // Obtener el nombre del mes actual
+      const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      const fechaActual = new Date();
+      const mesActual = meses[fechaActual.getMonth()];
+      const añoActual = fechaActual.getFullYear();
+      
+      // Actualizar título con el mes actual y el tipo de producto
       const nombreProducto = obtenerNombreProducto(tipoProducto);
       const tituloProducto = tipoProducto === 'todos' ? '' : ` - ${nombreProducto}`;
-      document.getElementById('nombreMesActual').textContent = `Mes${tituloProducto}`;
+      document.getElementById('nombreMesActual').textContent = `${mesActual} ${añoActual}${tituloProducto}`;
+      
+      // Intentar cargar configuración personalizada del mes
+      try {
+        const configResponse = await fetch('/api/configuracion/mes-actual');
+        const config = await configResponse.json();
+        if (config && config.nombreMes) {
+          document.getElementById('nombreMesActual').textContent = `${config.nombreMes}${tituloProducto}`;
+        }
+      } catch (configError) {
+        console.log('No se encontró configuración personalizada del mes');
+      }
     } catch (error) {
       console.error('Error al cargar referidos cerrados:', error);
     }
