@@ -660,16 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Altura máxima de las barras en píxeles
     const maxHeight = 250;
     
-    // Colores predefinidos para tipos de productos
-    const coloresPorTipo = {
-      'vida': 'hsl(210, 70%, 60%)', // Azul
-      'concurso': 'hsl(120, 70%, 60%)', // Verde
-      'casa': 'hsl(30, 70%, 60%)', // Naranja
-      'auto': 'hsl(60, 70%, 60%)', // Amarillo
-      'comercial': 'hsl(270, 70%, 60%)', // Púrpura
-      'salud': 'hsl(0, 70%, 60%)' // Rojo
-    };
-    
+    // Usar colores aleatorios para todas las barras
     referidos.forEach(referido => {
       // Crear contenedor de la barra
       const barContainer = document.createElement('div');
@@ -683,10 +674,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const height = (referido.cantidad / maxCantidad) * maxHeight;
       bar.style.height = `${height}px`;
       
-      // Usar color predefinido según tipo o generar uno aleatorio
-      const tipoProducto = referido.tipoProducto || 'vida';
-      const color = coloresPorTipo[tipoProducto] || `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
-      bar.style.backgroundColor = color;
+      // Generar un color aleatorio para cada barra
+      const hue = Math.floor(Math.random() * 360);
+      const saturation = 70 + Math.floor(Math.random() * 20); // Entre 70% y 90%
+      const lightness = 50 + Math.floor(Math.random() * 20); // Entre 50% y 70%
+      bar.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
       
       // Valor en la parte superior de la barra
       const barValue = document.createElement('div');
