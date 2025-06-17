@@ -1,0 +1,42 @@
+/* Estilos para mejorar el desplazamiento horizontal del gráfico */
+
+.chart-container {
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+  overflow-x: auto !important;
+  width: 100% !important;
+  padding-bottom: 60px !important;
+  scrollbar-width: thin;
+  scrollbar-color: #3498db #f0f0f0;
+}
+
+/* Estilos para la barra de desplazamiento en Chrome/Edge/Safari */
+.chart-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.chart-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.chart-container::-webkit-scrollbar-thumb {
+  background-color: #3498db;
+  border-radius: 4px;
+}
+
+/* Indicador visual de desplazamiento */
+.chart-container::after {
+  content: "→ Deslizar para ver más →";
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  font-size: 12px;
+  color: #777;
+  opacity: 0.7;
+}
+
+/* Asegurar que las barras no se envuelvan */
+.chart-bar {
+  flex-shrink: 0;
+}

@@ -205,13 +205,14 @@ input, select {
   min-height: 300px;
   display: flex;
   align-items: flex-end;
-  justify-content: center;
-  gap: 2px;
+  justify-content: flex-start;
+  gap: .01rem;
   padding: 20px 0 40px 0;
   border-bottom: 2px solid #ddd;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   overflow-x: auto;
   position: relative;
+  width: 100%;
 }
 
 .chart-bar {
@@ -220,14 +221,14 @@ input, select {
   align-items: center;
   width: 50px;
   margin-bottom: 50px;
-  margin-right: 5px;
-  margin-left: 5px;
+  margin-right: .01rem;
+  margin-left: .01rem;
   position: relative;
   height: auto;
 }
 
 .bar {
-  width: 30px;
+  width: 1.5rem;
   background-color: #3498db;
   border-radius: 4px 4px 0 0;
   transition: height 0.5s;
