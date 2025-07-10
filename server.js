@@ -11,6 +11,7 @@ const conectarDB = require('./config/db');
 const Referido = require('./models/Referido');
 const HistorialReferido = require('./models/HistorialReferido');
 const Configuracion = require('./models/Configuracion');
+const AñoCorporativo = require('./models/AñoCorporativo');
 const authRoutes = require('./routes/auth');
 const { estaAutenticado, puedeEditar } = require('./middleware/auth');
 
@@ -283,6 +284,82 @@ app.get('/api/referidos/pendientes', async (req, res) => {
   }
 });
 
+// Función auxiliar para obtener trimestre corporativo
+function obtenerTrimestreCorporativo(fecha) {
+  const mes = fecha.getMonth(); // 0-11
+  if (mes >= 6 && mes <= 8) return 1; // Julio, Agosto, Septiembre
+  if (mes >= 9 && mes <= 11) return 2; // Octubre, Noviembre, Diciembre
+  if (mes >= 0 && mes <= 2) return 3; // Enero, Febrero, Marzo
+  if (mes >= 3 && mes <= 5) return 4; // Abril, Mayo, Junio
+}
+
+// Obtener referidos del año corporativo
+app.get('/api/ano-corporativo/cerrados', async (req, res) => {
+  try {
+    console.log('Consultando referidos del año corporativo...');
+    const referidos = await AñoCorporativo.find({ cerrado: true });
+    console.log(`Encontrados ${referidos.length} referidos cerrados en el año corporativo`);
+    
+    // Agrupar por empleado
+    const referidosPorEmpleado = [];
+    const empleadosMap = {};
+    
+    referidos.forEach(referido => {
+      const { nombreEmpleado } = referido;
+      
+      if (empleadosMap[nombreEmpleado]) {
+        empleadosMap[nombreEmpleado].cantidad += 1;
+      } else {
+        empleadosMap[nombreEmpleado] = {
+          _id: referido._id,
+          nombreEmpleado,
+          cantidad: 1
+        };
+        referidosPorEmpleado.push(empleadosMap[nombreEmpleado]);
+      }
+    });
+    
+    console.log('Referidos agrupados por empleado:', referidosPorEmpleado);
+    res.json(referidosPorEmpleado);
+  } catch (error) {
+    console.error('Error al obtener referidos del año corporativo:', error);
+    res.status(500).json({ error: 'Error al obtener referidos del año corporativo' });
+  }
+});
+
+// Obtener estadísticas del año corporativo
+app.get('/api/ano-corporativo/estadisticas', async (req, res) => {
+  try {
+    console.log('Consultando estadísticas del año corporativo...');
+    const totalCerrados = await AñoCorporativo.countDocuments({ cerrado: true });
+    const totalEnviados = await AñoCorporativo.countDocuments();
+    
+    console.log(`Estadísticas: ${totalCerrados} cerrados, ${totalEnviados} enviados`);
+    
+    res.json({
+      totalCerrados,
+      totalEnviados
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas del año corporativo:', error);
+    res.status(500).json({ error: 'Error al obtener estadísticas del año corporativo' });
+  }
+});
+
+// Reiniciar año corporativo
+app.post('/api/ano-corporativo/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
+  try {
+    const resultado = await AñoCorporativo.deleteMany({});
+    console.log(`Eliminados ${resultado.deletedCount} referidos del año corporativo`);
+    res.json({ 
+      mensaje: `Año corporativo reiniciado correctamente. Se eliminaron ${resultado.deletedCount} referidos.`
+    });
+  } catch (error) {
+    console.error('Error al reiniciar año corporativo:', error);
+    res.status(500).json({ error: 'Error al reiniciar año corporativo' });
+  }
+});
+
 // Agregar un nuevo referido (requiere autenticación y permisos de edición)
 app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
   const { nombreCliente, nombreEmpleado, paisEmpleado, tipoEnvio, tipoProducto } = req.body;
@@ -292,18 +369,41 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
   }
 
   try {
+    const fechaActual = new Date();
+    const tipoProductoFinal = tipoProducto || 'vida';
+    
     // Crear nuevo referido
     const nuevoReferido = new Referido({
       nombreCliente,
       nombreEmpleado,
       paisEmpleado,
       tipoEnvio: tipoEnvio || 'linea',
-      tipoProducto: tipoProducto || 'vida',
-      fechaEnvio: new Date(),
+      tipoProducto: tipoProductoFinal,
+      fechaEnvio: fechaActual,
       cerrado: false
     });
     
     await nuevoReferido.save();
+    
+    // Si es de tipo vida, también guardarlo en el año corporativo
+    if (tipoProductoFinal === 'vida') {
+      const trimestreCorporativo = obtenerTrimestreCorporativo(fechaActual);
+      const añoCorporativo = fechaActual.getFullYear();
+      
+      const referidoCorporativo = new AñoCorporativo({
+        nombreCliente,
+        nombreEmpleado,
+        paisEmpleado,
+        tipoEnvio: tipoEnvio || 'linea',
+        tipoProducto: 'vida',
+        fechaEnvio: fechaActual,
+        cerrado: false,
+        trimestreCorporativo,
+        añoCorporativo
+      });
+      
+      await referidoCorporativo.save();
+    }
     
     const referidos = await Referido.find({ cerrado: false }).sort({ fechaEnvio: -1 });
     res.status(201).json(referidos);
@@ -332,11 +432,15 @@ app.put('/api/referidos/:id/cerrar', estaAutenticado, puedeEditar, async (req, r
     
     console.log('Referido encontrado:', referido);
     
+    const fechaCierre = new Date();
+    const nombreCerradorFinal = nombreCerrador || (req.user ? req.user.nombre : 'Usuario Local');
+    const nombreCompaniaFinal = nombreCompania || '';
+    
     // Marcar como cerrado y establecer fecha de cierre
     referido.cerrado = true;
-    referido.fechaCierre = new Date();
-    referido.nombreCerrador = nombreCerrador || (req.user ? req.user.nombre : 'Usuario Local');
-    referido.nombreCompania = nombreCompania || '';
+    referido.fechaCierre = fechaCierre;
+    referido.nombreCerrador = nombreCerradorFinal;
+    referido.nombreCompania = nombreCompaniaFinal;
     
     console.log('Guardando referido con datos actualizados:', {
       cerrado: referido.cerrado,
@@ -347,6 +451,27 @@ app.put('/api/referidos/:id/cerrar', estaAutenticado, puedeEditar, async (req, r
     
     const referidoGuardado = await referido.save();
     console.log('Referido guardado correctamente:', referidoGuardado);
+    
+    // Si es de tipo vida, también cerrar en el año corporativo
+    if (referido.tipoProducto === 'vida' || !referido.tipoProducto) {
+      const referidoCorporativo = await AñoCorporativo.findOne({
+        nombreCliente: referido.nombreCliente,
+        nombreEmpleado: referido.nombreEmpleado,
+        fechaEnvio: referido.fechaEnvio,
+        cerrado: false
+      });
+      
+      if (referidoCorporativo) {
+        referidoCorporativo.cerrado = true;
+        referidoCorporativo.fechaCierre = fechaCierre;
+        referidoCorporativo.nombreCerrador = nombreCerradorFinal;
+        referidoCorporativo.nombreCompania = nombreCompaniaFinal;
+        await referidoCorporativo.save();
+        console.log('Referido corporativo también cerrado');
+      } else {
+        console.log('No se encontró referido corporativo correspondiente para cerrar');
+      }
+    }
     
     // Verificar que el referido se guardó correctamente
     const referidoVerificado = await Referido.findById(id);
@@ -365,7 +490,20 @@ app.delete('/api/referidos/:id', estaAutenticado, puedeEditar, async (req, res) 
   const id = req.params.id;
   
   try {
-    await Referido.findByIdAndDelete(id);
+    const referido = await Referido.findById(id);
+    
+    if (referido) {
+      // Si es de tipo vida, también eliminar del año corporativo
+      if (referido.tipoProducto === 'vida' || !referido.tipoProducto) {
+        await AñoCorporativo.findOneAndDelete({
+          nombreCliente: referido.nombreCliente,
+          nombreEmpleado: referido.nombreEmpleado,
+          fechaEnvio: referido.fechaEnvio
+        });
+      }
+      
+      await Referido.findByIdAndDelete(id);
+    }
     
     const referidos = await Referido.find({}).sort({ fechaEnvio: -1 });
     res.json(referidos);
@@ -382,7 +520,6 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
     const referidosCerrados = await Referido.find({ cerrado: true });
     
     // Guardar en historial antes de eliminar
-    const HistorialReferido = require('./models/HistorialReferido');
     const fecha = new Date();
     const mes = fecha.getMonth();
     const año = fecha.getFullYear();
@@ -390,7 +527,7 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
     // Guardar cada referido en el historial
     for (const referido of referidosCerrados) {
       await new HistorialReferido({
-        mes,
+        mes: mes + 1, // Corregir: mes va de 0-11, pero queremos 1-12
         año,
         nombreCliente: referido.nombreCliente,
         nombreEmpleado: referido.nombreEmpleado,
@@ -404,11 +541,11 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
       }).save();
     }
     
-    // Eliminar solo los referidos cerrados
+    // Eliminar solo los referidos cerrados (NO eliminar del año corporativo)
     await Referido.deleteMany({ cerrado: true });
     
     res.json({ 
-      mensaje: 'Datos de referidos cerrados reiniciados correctamente y guardados en historial'
+      mensaje: 'Datos de referidos cerrados reiniciados correctamente y guardados en historial. Los referidos de vida se mantienen en el año corporativo.'
     });
   } catch (error) {
     console.error('Error al reiniciar datos:', error);

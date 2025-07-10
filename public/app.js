@@ -33,8 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const historialMesSelect = document.getElementById('historialMes');
   const historialAñoSelect = document.getElementById('historialAño');
   const consultarHistorialBtn = document.getElementById('consultarHistorialBtn');
-
   const exportarHistorialBtn = document.getElementById('exportarHistorialBtn');
+  const corporativoCerradosBody = document.getElementById('corporativoCerradosBody');
+  const corporativoChartContainer = document.getElementById('corporativoChartContainer');
+  const reiniciarAñoCorporativoBtn = document.getElementById('reiniciarAñoCorporativoBtn');
 
   
   // Establecer año actual en el selector
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cargar datos iniciales
   cargarReferidosPendientes();
   cargarReferidosCerrados();
+  cargarAñoCorporativo();
 
   // Event listeners
   tabBtns.forEach(btn => {
@@ -63,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   consultarHistorialBtn.addEventListener('click', consultarHistorial);
   exportarHistorialBtn.addEventListener('click', exportarHistorial);
+  reiniciarAñoCorporativoBtn.addEventListener('click', reiniciarAñoCorporativo);
 
   // Función para cambiar entre tabs
   function cambiarTab(tabId) {
@@ -87,6 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
       cargarReferidosPendientes();
     } else if (tabId === 'cerrados') {
       cargarReferidosCerrados();
+    } else if (tabId === 'año-corporativo') {
+      cargarAñoCorporativo();
     } else if (tabId === 'historial') {
       consultarHistorial();
     }
@@ -157,6 +163,95 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Error al cargar referidos cerrados:', error);
     }
+  }
+
+  // Función para cargar año corporativo
+  async function cargarAñoCorporativo() {
+    try {
+      console.log('Cargando datos del año corporativo...');
+      
+      // Cargar referidos cerrados del año corporativo
+      const response = await fetch('/api/ano-corporativo/cerrados');
+      const referidos = await response.json();
+      console.log('Referidos del año corporativo recibidos:', referidos);
+      
+      actualizarTablaCorporativo(referidos);
+      actualizarGrafico(referidos, corporativoChartContainer);
+      
+      // Cargar estadísticas del año corporativo
+      const estadisticasResponse = await fetch('/api/ano-corporativo/estadisticas');
+      const estadisticas = await estadisticasResponse.json();
+      console.log('Estadísticas del año corporativo:', estadisticas);
+      
+      // Actualizar contador (solo cerrados para el concurso)
+      document.getElementById('totalCorporativoCerrados').textContent = estadisticas.totalCerrados;
+    } catch (error) {
+      console.error('Error al cargar año corporativo:', error);
+    }
+  }
+
+  // Función para reiniciar año corporativo
+  async function reiniciarAñoCorporativo() {
+    // Verificar si el usuario tiene permisos de administrador
+    if (window.esUsuarioAdmin === false) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
+    
+    if (!confirm('¿Estás seguro de reiniciar el año corporativo? Esta acción eliminará todos los referidos del año corporativo.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/ano-corporativo/reiniciar', {
+        method: 'POST'
+      });
+      
+      const resultado = await response.json();
+      alert(resultado.mensaje);
+      cargarAñoCorporativo();
+    } catch (error) {
+      console.error('Error al reiniciar año corporativo:', error);
+      alert('Error al reiniciar año corporativo');
+    }
+  }
+
+  // Función para actualizar la tabla del año corporativo
+  function actualizarTablaCorporativo(referidos) {
+    corporativoCerradosBody.innerHTML = '';
+    
+    if (referidos.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 2;
+      cell.textContent = 'No hay referidos cerrados en el año corporativo';
+      cell.style.textAlign = 'center';
+      row.appendChild(cell);
+      corporativoCerradosBody.appendChild(row);
+      return;
+    }
+    
+    // Ordenar por cantidad (mayor a menor)
+    referidos.sort((a, b) => b.cantidad - a.cantidad);
+    
+    referidos.forEach(referido => {
+      const row = document.createElement('tr');
+      
+      // Columna de empleado
+      const empleadoCell = document.createElement('td');
+      empleadoCell.textContent = referido.nombreEmpleado;
+      
+      // Columna de cantidad
+      const cantidadCell = document.createElement('td');
+      cantidadCell.textContent = referido.cantidad;
+      
+      // Agregar celdas a la fila
+      row.appendChild(empleadoCell);
+      row.appendChild(cantidadCell);
+      
+      // Agregar fila a la tabla
+      corporativoCerradosBody.appendChild(row);
+    });
   }
 
   // Función para consultar historial

@@ -25,6 +25,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="pendientes">Referidos Pendientes</button>
       <button class="tab-btn" data-tab="cerrados">Referidos Cerrados</button>
+      <button class="tab-btn" data-tab="año-corporativo">Año Corporativo</button>
       <button class="tab-btn" data-tab="historial">Historial</button>
     </div>
     
@@ -159,6 +160,38 @@
       </div>
     </div>
     
+    <!-- Tab de Año Corporativo -->
+    <div class="tab-content" id="año-corporativo-tab">
+      <div class="admin-controls">
+        <button id="reiniciarAñoCorporativoBtn" class="btn btn-danger">Reiniciar Año Corporativo</button>
+      </div>
+      
+      <div class="results-container">
+        <div class="header-with-logo chart-header">
+          <img src="images/logo.png" alt="Logo Empresa" class="chart-logo">
+          <h2>Concurso Año Corporativo - Vida</h2>
+        </div>
+        <div class="stats-container">
+          <div class="stat-box">
+            <div class="stat-value" id="totalCorporativoCerrados">0</div>
+            <div class="stat-label">Total Referidos Cerrados (Concurso)</div>
+          </div>
+        </div>
+        <div class="chart-container" id="corporativoChartContainer"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Empleado</th>
+                <th>Referidos Cerrados</th>
+              </tr>
+            </thead>
+            <tbody id="corporativoCerradosBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
     <!-- Tab de Historial -->
     <div class="tab-content" id="historial-tab">
       <div class="form-container">
@@ -168,18 +201,18 @@
             <label for="historialMes">Mes:</label>
             <select id="historialMes">
               <option value="">Todos</option>
-              <option value="0">Enero</option>
-              <option value="1">Febrero</option>
-              <option value="2">Marzo</option>
-              <option value="3">Abril</option>
-              <option value="4">Mayo</option>
-              <option value="5">Junio</option>
-              <option value="6">Julio</option>
-              <option value="7">Agosto</option>
-              <option value="8">Septiembre</option>
-              <option value="9">Octubre</option>
-              <option value="10">Noviembre</option>
-              <option value="11">Diciembre</option>
+              <option value="1">Enero</option>
+              <option value="2">Febrero</option>
+              <option value="3">Marzo</option>
+              <option value="4">Abril</option>
+              <option value="5">Mayo</option>
+              <option value="6">Junio</option>
+              <option value="7">Julio</option>
+              <option value="8">Agosto</option>
+              <option value="9">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
             </select>
           </div>
           <div class="form-group">

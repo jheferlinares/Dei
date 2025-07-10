@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 
-// Añadir hooks para depuración
-mongoose.set('debug', true);
-
-const referidoSchema = new mongoose.Schema({
+const añoCorporativoSchema = new mongoose.Schema({
   // Información del cliente
   nombreCliente: {
     type: String,
@@ -29,6 +26,10 @@ const referidoSchema = new mongoose.Schema({
     required: true,
     default: Date.now
   },
+  fechaCierre: {
+    type: Date,
+    default: null
+  },
   tipoEnvio: {
     type: String,
     required: true,
@@ -36,11 +37,10 @@ const referidoSchema = new mongoose.Schema({
     default: 'linea'
   },
   
-  // Tipo de producto
+  // Solo vida para el año corporativo
   tipoProducto: {
     type: String,
     required: true,
-    enum: ['vida', 'casa', 'auto', 'comercial', 'salud'],
     default: 'vida'
   },
   
@@ -48,10 +48,6 @@ const referidoSchema = new mongoose.Schema({
   cerrado: {
     type: Boolean,
     default: false
-  },
-  fechaCierre: {
-    type: Date,
-    default: null
   },
   
   // Información del cerrador
@@ -66,17 +62,19 @@ const referidoSchema = new mongoose.Schema({
     type: String,
     trim: true,
     default: ''
+  },
+  
+  // Trimestre corporativo (1, 2, 3, 4)
+  trimestreCorporativo: {
+    type: Number,
+    required: true
+  },
+  
+  // Año corporativo
+  añoCorporativo: {
+    type: Number,
+    required: true
   }
 });
 
-// Añadir middleware pre-save para depuración
-referidoSchema.pre('save', function(next) {
-  console.log('Guardando referido:', this);
-  next();
-});
-
-referidoSchema.post('save', function(doc) {
-  console.log('Referido guardado correctamente:', doc);
-});
-
-module.exports = mongoose.model('Referido', referidoSchema);
+module.exports = mongoose.model('AñoCorporativo', añoCorporativoSchema);
