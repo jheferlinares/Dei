@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nombreClienteInput = document.getElementById('nombreCliente');
   const nombreEmpleadoInput = document.getElementById('nombreEmpleado');
   const paisEmpleadoInput = document.getElementById('paisEmpleado');
+  const nombreSupervisorInput = document.getElementById('nombreSupervisor');
   const tipoProductoSelect = document.getElementById('tipoProducto');
   const pendientesBody = document.getElementById('pendientesBody');
   const cerradosBody = document.getElementById('cerradosBody');
@@ -32,11 +33,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchBtn = document.getElementById('searchBtn');
   const historialMesSelect = document.getElementById('historialMes');
   const historialAñoSelect = document.getElementById('historialAño');
+  const historialTrimestreSelect = document.getElementById('historialTrimestre');
   const consultarHistorialBtn = document.getElementById('consultarHistorialBtn');
   const exportarHistorialBtn = document.getElementById('exportarHistorialBtn');
   const corporativoCerradosBody = document.getElementById('corporativoCerradosBody');
   const corporativoChartContainer = document.getElementById('corporativoChartContainer');
   const reiniciarAñoCorporativoBtn = document.getElementById('reiniciarAñoCorporativoBtn');
+  
+  // Referencias para búsquedas
+  const searchCerradosInput = document.getElementById('searchCerradosInput');
+  const searchCerradosBtn = document.getElementById('searchCerradosBtn');
+  const clearCerradosBtn = document.getElementById('clearCerradosBtn');
+  const searchCorporativoInput = document.getElementById('searchCorporativoInput');
+  const searchCorporativoBtn = document.getElementById('searchCorporativoBtn');
+  const clearCorporativoBtn = document.getElementById('clearCorporativoBtn');
+  const searchHistorialInput = document.getElementById('searchHistorialInput');
+  const searchHistorialBtn = document.getElementById('searchHistorialBtn');
+  const clearHistorialBtn = document.getElementById('clearHistorialBtn');
 
   
   // Establecer año actual en el selector
@@ -64,9 +77,61 @@ document.addEventListener('DOMContentLoaded', () => {
       buscarReferidos();
     }
   });
+  
+  // Event listeners para Enter en búsquedas (con verificación)
+  if (searchCerradosInput) {
+    searchCerradosInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        buscarCerrados();
+      }
+    });
+  }
+  if (searchCorporativoInput) {
+    searchCorporativoInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        buscarCorporativo();
+      }
+    });
+  }
+  if (searchHistorialInput) {
+    searchHistorialInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        buscarHistorial();
+      }
+    });
+  }
   consultarHistorialBtn.addEventListener('click', consultarHistorial);
   exportarHistorialBtn.addEventListener('click', exportarHistorial);
   reiniciarAñoCorporativoBtn.addEventListener('click', reiniciarAñoCorporativo);
+  
+  // Event listeners para búsquedas (con verificación de existencia)
+  if (searchCerradosBtn) {
+    searchCerradosBtn.addEventListener('click', buscarCerrados);
+  }
+  if (clearCerradosBtn) {
+    clearCerradosBtn.addEventListener('click', () => {
+      searchCerradosInput.value = '';
+      cargarReferidosCerrados();
+    });
+  }
+  if (searchCorporativoBtn) {
+    searchCorporativoBtn.addEventListener('click', buscarCorporativo);
+  }
+  if (clearCorporativoBtn) {
+    clearCorporativoBtn.addEventListener('click', () => {
+      searchCorporativoInput.value = '';
+      cargarAñoCorporativo();
+    });
+  }
+  if (searchHistorialBtn) {
+    searchHistorialBtn.addEventListener('click', buscarHistorial);
+  }
+  if (clearHistorialBtn) {
+    clearHistorialBtn.addEventListener('click', () => {
+      searchHistorialInput.value = '';
+      consultarHistorial();
+    });
+  }
 
   // Función para cambiar entre tabs
   function cambiarTab(tabId) {
@@ -258,15 +323,18 @@ document.addEventListener('DOMContentLoaded', () => {
   async function consultarHistorial() {
     const mes = historialMesSelect.value;
     const año = historialAñoSelect.value;
+    const trimestre = historialTrimestreSelect.value;
     
     try {
       let url = '/api/historial';
-      if (mes !== '' && año !== '') {
-        url += `?mes=${mes}&año=${año}`;
-      } else if (año !== '') {
-        url += `?año=${año}`;
-      } else if (mes !== '') {
-        url += `?mes=${mes}`;
+      const params = new URLSearchParams();
+      
+      if (mes) params.append('mes', mes);
+      if (año) params.append('año', año);
+      if (trimestre) params.append('trimestre', trimestre);
+      
+      if (params.toString()) {
+        url += '?' + params.toString();
       }
       
       const response = await fetch(url);
@@ -297,10 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const nombreCliente = nombreClienteInput.value.trim();
     const nombreEmpleado = nombreEmpleadoInput.value.trim();
     const paisEmpleado = paisEmpleadoInput.value.trim();
+    const nombreSupervisor = nombreSupervisorInput.value.trim();
     const tipoEnvio = document.querySelector('input[name="tipoEnvio"]:checked').value;
     const tipoProducto = document.getElementById('tipoProducto').value;
 
-    if (!nombreCliente || !nombreEmpleado || !paisEmpleado) {
+    if (!nombreCliente || !nombreEmpleado || !paisEmpleado || !nombreSupervisor) {
       alert('Por favor completa todos los campos');
       return;
     }
@@ -315,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
           nombreCliente,
           nombreEmpleado,
           paisEmpleado,
+          nombreSupervisor,
           tipoEnvio,
           tipoProducto
         })
@@ -332,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
       nombreClienteInput.value = '';
       nombreEmpleadoInput.value = '';
       paisEmpleadoInput.value = '';
+      nombreSupervisorInput.value = '';
       document.querySelector('input[value="linea"]').checked = true;
       
       alert('Referido registrado correctamente');
@@ -437,6 +508,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Función para buscar en referidos cerrados
+  async function buscarCerrados() {
+    const termino = searchCerradosInput.value.trim();
+    console.log('Buscando en cerrados:', termino);
+    
+    if (!termino) {
+      alert('Por favor ingresa un término de búsqueda');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/referidos/cerrados/buscar?termino=${encodeURIComponent(termino)}`);
+      const data = await response.json();
+      console.log('Resultados cerrados:', data);
+      
+      actualizarTablaCerrados(data.resumen);
+      actualizarGrafico(data.resumen, chartContainer);
+      actualizarTablaCerradosDetalle(data.detalle);
+      
+      if (data.detalle.length === 0) {
+        alert('No se encontraron referidos cerrados con ese término');
+      }
+    } catch (error) {
+      console.error('Error al buscar referidos cerrados:', error);
+    }
+  }
+
+  // Función para buscar en año corporativo
+  async function buscarCorporativo() {
+    const termino = searchCorporativoInput.value.trim();
+    console.log('Buscando en corporativo:', termino);
+    
+    if (!termino) {
+      alert('Por favor ingresa un término de búsqueda');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/ano-corporativo/buscar?termino=${encodeURIComponent(termino)}`);
+      const referidos = await response.json();
+      console.log('Resultados corporativo:', referidos);
+      
+      actualizarTablaCorporativo(referidos);
+      actualizarGrafico(referidos, corporativoChartContainer);
+      
+      if (referidos.length === 0) {
+        alert('No se encontraron referidos corporativos con ese término');
+      }
+    } catch (error) {
+      console.error('Error al buscar en año corporativo:', error);
+    }
+  }
+
+  // Función para buscar en historial
+  async function buscarHistorial() {
+    const termino = searchHistorialInput.value.trim();
+    console.log('Buscando en historial:', termino);
+    
+    if (!termino) {
+      alert('Por favor ingresa un término de búsqueda');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/historial/buscar?termino=${encodeURIComponent(termino)}`);
+      const data = await response.json();
+      console.log('Resultados historial:', data);
+      
+      actualizarTablaHistorialResumen(data.resumen);
+      actualizarTablaHistorialDetalle(data.detalle);
+      actualizarGrafico(data.resumen, historialChartContainer);
+      
+      document.getElementById('totalHistorialCerrados').textContent = data.detalle.length;
+      
+      if (data.detalle.length === 0) {
+        alert('No se encontraron referidos históricos con ese término');
+      }
+    } catch (error) {
+      console.error('Error al buscar en historial:', error);
+    }
+  }
+
   // Función para reiniciar datos
   async function reiniciarDatos() {
     // Verificar si el usuario tiene permisos de administrador
@@ -472,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 7; // Aumentado a 7 para incluir la columna de producto
+      cell.colSpan = 8; // Aumentado a 8 para incluir supervisor
       cell.textContent = 'No hay referidos pendientes';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -494,6 +647,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // Columna de país
       const paisCell = document.createElement('td');
       paisCell.textContent = referido.paisEmpleado;
+      
+      // Columna de supervisor
+      const supervisorCell = document.createElement('td');
+      supervisorCell.textContent = referido.nombreSupervisor || 'No especificado';
       
       // Columna de fecha
       const fechaCell = document.createElement('td');
@@ -534,6 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(clienteCell);
       row.appendChild(empleadoCell);
       row.appendChild(paisCell);
+      row.appendChild(supervisorCell);
       row.appendChild(fechaCell);
       row.appendChild(tipoCell);
       row.appendChild(productoCell);
@@ -589,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 8; // Aumentado a 8 para incluir la columna del producto
+      cell.colSpan = 9;
       cell.textContent = 'No hay referidos cerrados en este mes';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -600,41 +758,36 @@ document.addEventListener('DOMContentLoaded', () => {
     referidos.forEach(referido => {
       const row = document.createElement('tr');
       
-      // Columna de cliente
       const clienteCell = document.createElement('td');
       clienteCell.textContent = referido.nombreCliente;
       
-      // Columna de empleado
       const empleadoCell = document.createElement('td');
       empleadoCell.textContent = referido.nombreEmpleado;
       
-      // Columna de fecha de envío
+      const supervisorCell = document.createElement('td');
+      supervisorCell.textContent = referido.nombreSupervisor || 'No especificado';
+      
       const fechaEnvioCell = document.createElement('td');
       fechaEnvioCell.textContent = new Date(referido.fechaEnvio).toLocaleDateString();
       
-      // Columna de fecha de cierre
       const fechaCierreCell = document.createElement('td');
       fechaCierreCell.textContent = referido.fechaCierre ? new Date(referido.fechaCierre).toLocaleDateString() : 'N/A';
       
-      // Columna de cerrador
       const cerradorCell = document.createElement('td');
       cerradorCell.textContent = referido.nombreCerrador || 'No especificado';
       
-      // Columna de compañía
       const companiaCell = document.createElement('td');
       companiaCell.textContent = referido.nombreCompania || 'No especificada';
       
-      // Columna de tipo
       const tipoCell = document.createElement('td');
       tipoCell.textContent = referido.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
       
-      // Columna de producto
       const productoCell = document.createElement('td');
       productoCell.textContent = obtenerNombreProducto(referido.tipoProducto);
       
-      // Agregar celdas a la fila
       row.appendChild(clienteCell);
       row.appendChild(empleadoCell);
+      row.appendChild(supervisorCell);
       row.appendChild(fechaEnvioCell);
       row.appendChild(fechaCierreCell);
       row.appendChild(cerradorCell);
@@ -642,7 +795,6 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(tipoCell);
       row.appendChild(productoCell);
       
-      // Agregar fila a la tabla
       cerradosDetalleBody.appendChild(row);
     });
   }
@@ -692,7 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 8; // Aumentado a 8 para incluir la columna del producto
+      cell.colSpan = 9;
       cell.textContent = 'No hay datos históricos para el período seleccionado';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -703,41 +855,36 @@ document.addEventListener('DOMContentLoaded', () => {
     referidos.forEach(referido => {
       const row = document.createElement('tr');
       
-      // Columna de cliente
       const clienteCell = document.createElement('td');
       clienteCell.textContent = referido.nombreCliente;
       
-      // Columna de empleado
       const empleadoCell = document.createElement('td');
       empleadoCell.textContent = referido.nombreEmpleado;
       
-      // Columna de fecha de envío
+      const supervisorCell = document.createElement('td');
+      supervisorCell.textContent = referido.nombreSupervisor || 'No especificado';
+      
       const fechaEnvioCell = document.createElement('td');
       fechaEnvioCell.textContent = new Date(referido.fechaEnvio).toLocaleDateString();
       
-      // Columna de fecha de cierre
       const fechaCierreCell = document.createElement('td');
       fechaCierreCell.textContent = new Date(referido.fechaCierre).toLocaleDateString();
       
-      // Columna de cerrador
       const cerradorCell = document.createElement('td');
       cerradorCell.textContent = referido.nombreCerrador || 'No especificado';
       
-      // Columna de compañía
       const companiaCell = document.createElement('td');
       companiaCell.textContent = referido.nombreCompania || 'No especificada';
       
-      // Columna de tipo
       const tipoCell = document.createElement('td');
       tipoCell.textContent = referido.tipoEnvio === 'linea' ? 'En Línea' : 'Callback';
       
-      // Columna de producto
       const productoCell = document.createElement('td');
       productoCell.textContent = obtenerNombreProducto(referido.tipoProducto);
       
-      // Agregar celdas a la fila
       row.appendChild(clienteCell);
       row.appendChild(empleadoCell);
+      row.appendChild(supervisorCell);
       row.appendChild(fechaEnvioCell);
       row.appendChild(fechaCierreCell);
       row.appendChild(cerradorCell);
@@ -745,7 +892,6 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(tipoCell);
       row.appendChild(productoCell);
       
-      // Agregar fila a la tabla
       historialDetalleBody.appendChild(row);
     });
   }

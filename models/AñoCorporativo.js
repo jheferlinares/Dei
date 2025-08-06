@@ -20,6 +20,13 @@ const añoCorporativoSchema = new mongoose.Schema({
     trim: true
   },
   
+  // Información del supervisor
+  nombreSupervisor: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  
   // Información del referido
   fechaEnvio: {
     type: Date,

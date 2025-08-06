@@ -10,6 +10,13 @@ const historialReferidoSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  
+  // Trimestre corporativo (1-4)
+  trimestreCorporativo: {
+    type: Number,
+    min: 1,
+    max: 4
+  },
   nombreCliente: {
     type: String,
     required: true,
@@ -24,6 +31,13 @@ const historialReferidoSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  
+  // Información del supervisor
+  nombreSupervisor: {
+    type: String,
+    trim: true,
+    default: 'No especificado'
   },
   fechaEnvio: {
     type: Date,

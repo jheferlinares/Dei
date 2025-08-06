@@ -59,6 +59,10 @@
             <input type="text" id="paisEmpleado" required>
           </div>
           <div class="form-group">
+            <label for="nombreSupervisor">Nombre del Supervisor:</label>
+            <input type="text" id="nombreSupervisor" required>
+          </div>
+          <div class="form-group">
             <label>Tipo de Envío:</label>
             <div class="radio-group">
               <label>
@@ -90,6 +94,7 @@
                 <th>Cliente</th>
                 <th>Empleado</th>
                 <th>País</th>
+                <th>Supervisor</th>
                 <th>Fecha Envío</th>
                 <th>Tipo</th>
                 <th>Producto</th>
@@ -115,6 +120,15 @@
             <h2>Referidos Cerrados de <span id="nombreMesActual">Mes</span></h2>
           </div>
           <button id="editarMesBtn" class="btn btn-small">Editar Mes</button>
+        </div>
+        
+        <div class="search-container">
+          <h3>Buscar en Referidos Cerrados</h3>
+          <div class="search-form">
+            <input type="text" id="searchCerradosInput" placeholder="Buscar por nombre de cliente, empleado o supervisor...">
+            <button id="searchCerradosBtn" class="btn">Buscar</button>
+            <button id="clearCerradosBtn" class="btn" style="background-color: #95a5a6;">Limpiar</button>
+          </div>
         </div>
         <div class="stats-container">
           <div class="stat-box">
@@ -146,6 +160,7 @@
               <tr>
                 <th>Cliente</th>
                 <th>Empleado</th>
+                <th>Supervisor</th>
                 <th>Fecha de Envío</th>
                 <th>Fecha de Cierre</th>
                 <th>Cerrado por</th>
@@ -170,6 +185,15 @@
         <div class="header-with-logo chart-header">
           <img src="images/logo.png" alt="Logo Empresa" class="chart-logo">
           <h2>Concurso Año Corporativo - Vida</h2>
+        </div>
+        
+        <div class="search-container">
+          <h3>Buscar en Año Corporativo</h3>
+          <div class="search-form">
+            <input type="text" id="searchCorporativoInput" placeholder="Buscar por nombre de cliente, empleado o supervisor...">
+            <button id="searchCorporativoBtn" class="btn">Buscar</button>
+            <button id="clearCorporativoBtn" class="btn" style="background-color: #95a5a6;">Limpiar</button>
+          </div>
         </div>
         <div class="stats-container">
           <div class="stat-box">
@@ -224,6 +248,16 @@
               <option value="2025">2025</option>
             </select>
           </div>
+          <div class="form-group">
+            <label for="historialTrimestre">Trimestre Corporativo:</label>
+            <select id="historialTrimestre">
+              <option value="">Todos</option>
+              <option value="1">Q1 (Jul-Ago-Sep)</option>
+              <option value="2">Q2 (Oct-Nov-Dic)</option>
+              <option value="3">Q3 (Ene-Feb-Mar)</option>
+              <option value="4">Q4 (Abr-May-Jun)</option>
+            </select>
+          </div>
           <button id="consultarHistorialBtn" class="btn">Consultar</button>
           <button id="exportarHistorialBtn" class="btn" style="margin-left: 10px;">Exportar</button>
         </div>
@@ -253,6 +287,15 @@
           </table>
         </div>
         
+        <div class="search-container">
+          <h3>Buscar en Historial</h3>
+          <div class="search-form">
+            <input type="text" id="searchHistorialInput" placeholder="Buscar por nombre de cliente, empleado o supervisor...">
+            <button id="searchHistorialBtn" class="btn">Buscar</button>
+            <button id="clearHistorialBtn" class="btn" style="background-color: #95a5a6;">Limpiar</button>
+          </div>
+        </div>
+        
         <h3 style="margin-top: 30px;">Detalle de Referidos Históricos</h3>
         <div class="table-container">
           <table>
@@ -260,6 +303,7 @@
               <tr>
                 <th>Cliente</th>
                 <th>Empleado</th>
+                <th>Supervisor</th>
                 <th>Fecha de Envío</th>
                 <th>Fecha de Cierre</th>
                 <th>Cerrado por</th>

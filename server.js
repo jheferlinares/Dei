@@ -213,19 +213,15 @@ app.get('/api/referidos/cerrados/detalle', async (req, res) => {
   }
 });
 
-// Obtener historial de referidos por mes y año
+// Obtener historial de referidos por mes, año y trimestre corporativo
 app.get('/api/historial', async (req, res) => {
   try {
-    const { mes, año } = req.query;
+    const { mes, año, trimestre } = req.query;
     
     let consulta = {};
-    if (mes !== undefined && año !== undefined) {
-      consulta = { mes: parseInt(mes), año: parseInt(año) };
-    } else if (mes !== undefined) {
-      consulta = { mes: parseInt(mes) };
-    } else if (año !== undefined) {
-      consulta = { año: parseInt(año) };
-    }
+    if (mes !== undefined) consulta.mes = parseInt(mes);
+    if (año !== undefined) consulta.año = parseInt(año);
+    if (trimestre !== undefined) consulta.trimestreCorporativo = parseInt(trimestre);
     
     const historial = await HistorialReferido.find(consulta).sort({ fechaCierre: -1 });
     
@@ -360,11 +356,181 @@ app.post('/api/ano-corporativo/reiniciar', estaAutenticado, puedeEditar, async (
   }
 });
 
+// APIs de búsqueda
+// Buscar referidos por nombre de cliente, empleado o supervisor
+app.get('/api/referidos/buscar', async (req, res) => {
+  const { termino } = req.query;
+  
+  if (!termino) {
+    return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
+  }
+  
+  try {
+    const referidos = await Referido.find({
+      $or: [
+        { nombreCliente: { $regex: termino, $options: 'i' } },
+        { nombreEmpleado: { $regex: termino, $options: 'i' } },
+        { nombreSupervisor: { $regex: termino, $options: 'i' } }
+      ]
+    }).sort({ fechaEnvio: -1 });
+    
+    res.json(referidos);
+  } catch (error) {
+    console.error('Error al buscar referidos:', error);
+    res.status(500).json({ error: 'Error al buscar referidos' });
+  }
+});
+
+// Buscar en referidos cerrados
+app.get('/api/referidos/cerrados/buscar', async (req, res) => {
+  const { termino } = req.query;
+  console.log('Búsqueda en cerrados con término:', termino);
+  
+  if (!termino) {
+    return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
+  }
+  
+  try {
+    const referidos = await Referido.find({
+      cerrado: true,
+      $or: [
+        { nombreCliente: { $regex: termino, $options: 'i' } },
+        { nombreEmpleado: { $regex: termino, $options: 'i' } },
+        { nombreSupervisor: { $regex: termino, $options: 'i' } }
+      ]
+    }).sort({ fechaCierre: -1 });
+    
+    console.log(`Encontrados ${referidos.length} referidos cerrados`);
+    
+    // Agrupar por empleado para el resumen
+    const referidosPorEmpleado = [];
+    const empleadosMap = {};
+    
+    referidos.forEach(referido => {
+      const { nombreEmpleado } = referido;
+      
+      if (empleadosMap[nombreEmpleado]) {
+        empleadosMap[nombreEmpleado].cantidad += 1;
+      } else {
+        empleadosMap[nombreEmpleado] = {
+          _id: referido._id,
+          nombreEmpleado,
+          cantidad: 1
+        };
+        referidosPorEmpleado.push(empleadosMap[nombreEmpleado]);
+      }
+    });
+    
+    res.json({
+      resumen: referidosPorEmpleado,
+      detalle: referidos
+    });
+  } catch (error) {
+    console.error('Error al buscar referidos cerrados:', error);
+    res.status(500).json({ error: 'Error al buscar referidos cerrados' });
+  }
+});
+
+// Buscar en año corporativo
+app.get('/api/ano-corporativo/buscar', async (req, res) => {
+  const { termino } = req.query;
+  console.log('Búsqueda en corporativo con término:', termino);
+  
+  if (!termino) {
+    return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
+  }
+  
+  try {
+    const referidos = await AñoCorporativo.find({
+      cerrado: true,
+      $or: [
+        { nombreCliente: { $regex: termino, $options: 'i' } },
+        { nombreEmpleado: { $regex: termino, $options: 'i' } },
+        { nombreSupervisor: { $regex: termino, $options: 'i' } }
+      ]
+    });
+    
+    console.log(`Encontrados ${referidos.length} referidos corporativos`);
+    
+    // Agrupar por empleado
+    const referidosPorEmpleado = [];
+    const empleadosMap = {};
+    
+    referidos.forEach(referido => {
+      const { nombreEmpleado } = referido;
+      
+      if (empleadosMap[nombreEmpleado]) {
+        empleadosMap[nombreEmpleado].cantidad += 1;
+      } else {
+        empleadosMap[nombreEmpleado] = {
+          _id: referido._id,
+          nombreEmpleado,
+          cantidad: 1
+        };
+        referidosPorEmpleado.push(empleadosMap[nombreEmpleado]);
+      }
+    });
+    
+    res.json(referidosPorEmpleado);
+  } catch (error) {
+    console.error('Error al buscar en año corporativo:', error);
+    res.status(500).json({ error: 'Error al buscar en año corporativo' });
+  }
+});
+
+// Buscar en historial
+app.get('/api/historial/buscar', async (req, res) => {
+  const { termino } = req.query;
+  console.log('Búsqueda en historial con término:', termino);
+  
+  if (!termino) {
+    return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
+  }
+  
+  try {
+    const historial = await HistorialReferido.find({
+      $or: [
+        { nombreCliente: { $regex: termino, $options: 'i' } },
+        { nombreEmpleado: { $regex: termino, $options: 'i' } },
+        { nombreSupervisor: { $regex: termino, $options: 'i' } }
+      ]
+    }).sort({ fechaCierre: -1 });
+    
+    console.log(`Encontrados ${historial.length} registros en historial`);
+    
+    // Agrupar por empleado para estadísticas
+    const empleadosMap = {};
+    historial.forEach(referido => {
+      const { nombreEmpleado } = referido;
+      
+      if (empleadosMap[nombreEmpleado]) {
+        empleadosMap[nombreEmpleado].cantidad += 1;
+      } else {
+        empleadosMap[nombreEmpleado] = {
+          nombreEmpleado,
+          cantidad: 1
+        };
+      }
+    });
+    
+    const resumenEmpleados = Object.values(empleadosMap);
+    
+    res.json({
+      detalle: historial,
+      resumen: resumenEmpleados,
+      total: historial.length
+    });
+  } catch (error) {
+    console.error('Error al buscar en historial:', error);
+    res.status(500).json({ error: 'Error al buscar en historial' });
+  }
+});
+
 // Agregar un nuevo referido (requiere autenticación y permisos de edición)
 app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
-  const { nombreCliente, nombreEmpleado, paisEmpleado, tipoEnvio, tipoProducto } = req.body;
+  const { nombreCliente, nombreEmpleado, paisEmpleado, nombreSupervisor, tipoEnvio, tipoProducto } = req.body;
   
-  if (!nombreCliente || !nombreEmpleado || !paisEmpleado) {
+  if (!nombreCliente || !nombreEmpleado || !paisEmpleado || !nombreSupervisor) {
     return res.status(400).json({ error: 'Se requieren todos los campos' });
   }
 
@@ -377,6 +543,7 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
       nombreCliente,
       nombreEmpleado,
       paisEmpleado,
+      nombreSupervisor,
       tipoEnvio: tipoEnvio || 'linea',
       tipoProducto: tipoProductoFinal,
       fechaEnvio: fechaActual,
@@ -394,6 +561,7 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
         nombreCliente,
         nombreEmpleado,
         paisEmpleado,
+        nombreSupervisor,
         tipoEnvio: tipoEnvio || 'linea',
         tipoProducto: 'vida',
         fechaEnvio: fechaActual,
@@ -532,12 +700,14 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
         nombreCliente: referido.nombreCliente,
         nombreEmpleado: referido.nombreEmpleado,
         paisEmpleado: referido.paisEmpleado,
+        nombreSupervisor: referido.nombreSupervisor || 'No especificado',
         fechaEnvio: referido.fechaEnvio,
         fechaCierre: referido.fechaCierre,
         tipoEnvio: referido.tipoEnvio,
         tipoProducto: referido.tipoProducto || 'vida',
         nombreCerrador: referido.nombreCerrador || '',
-        nombreCompania: referido.nombreCompania || ''
+        nombreCompania: referido.nombreCompania || '',
+        trimestreCorporativo: obtenerTrimestreCorporativo(referido.fechaCierre || referido.fechaEnvio)
       }).save();
     }
     
@@ -553,28 +723,7 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
   }
 });
 
-// Buscar referidos por nombre de cliente o empleado
-app.get('/api/referidos/buscar', async (req, res) => {
-  const { termino } = req.query;
-  
-  if (!termino) {
-    return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
-  }
-  
-  try {
-    const referidos = await Referido.find({
-      $or: [
-        { nombreCliente: { $regex: termino, $options: 'i' } },
-        { nombreEmpleado: { $regex: termino, $options: 'i' } }
-      ]
-    }).sort({ fechaEnvio: -1 });
-    
-    res.json(referidos);
-  } catch (error) {
-    console.error('Error al buscar referidos:', error);
-    res.status(500).json({ error: 'Error al buscar referidos' });
-  }
-});
+
 
 // Ruta de login
 app.get('/login', (req, res) => {
@@ -589,7 +738,17 @@ app.get('/', estaAutenticado, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Ruta catch-all para debugging
+app.use('*', (req, res) => {
+  console.log('Ruta no encontrada:', req.originalUrl);
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log('APIs registradas:');
+  console.log('- /api/historial/buscar');
+  console.log('- /api/referidos/cerrados/buscar');
+  console.log('- /api/ano-corporativo/buscar');
 });
