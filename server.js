@@ -13,7 +13,7 @@ const HistorialReferido = require('./models/HistorialReferido');
 const Configuracion = require('./models/Configuracion');
 const AñoCorporativo = require('./models/AñoCorporativo');
 const authRoutes = require('./routes/auth');
-const { estaAutenticado, puedeEditar } = require('./middleware/auth');
+const { estaAutenticado, puedeEditar, esLider } = require('./middleware/auth');
 
 
 
@@ -47,6 +47,64 @@ app.use(passport.session());
 
 // Rutas de autenticación
 app.use('/auth', authRoutes);
+
+// Ruta para cambiar rol de usuario (solo administradores)
+app.post('/api/usuarios/:id/cambiar-rol', estaAutenticado, async (req, res) => {
+  try {
+    // Verificar que el usuario actual sea administrador
+    if (req.user && req.user.rol !== 'admin') {
+      return res.status(403).json({ error: 'Solo los administradores pueden cambiar roles' });
+    }
+    
+    const { id } = req.params;
+    const { nuevoRol } = req.body;
+    
+    if (!['usuario', 'admin', 'lider'].includes(nuevoRol)) {
+      return res.status(400).json({ error: 'Rol inválido' });
+    }
+    
+    const Usuario = require('./models/Usuario');
+    const usuario = await Usuario.findByIdAndUpdate(
+      id, 
+      { rol: nuevoRol }, 
+      { new: true }
+    );
+    
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    res.json({ 
+      mensaje: `Rol cambiado exitosamente a ${nuevoRol}`,
+      usuario: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol
+      }
+    });
+  } catch (error) {
+    console.error('Error al cambiar rol:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Ruta para listar usuarios (solo administradores)
+app.get('/api/usuarios', estaAutenticado, async (req, res) => {
+  try {
+    if (req.user && req.user.rol !== 'admin') {
+      return res.status(403).json({ error: 'Solo los administradores pueden ver usuarios' });
+    }
+    
+    const Usuario = require('./models/Usuario');
+    const usuarios = await Usuario.find({}, 'nombre email rol fechaRegistro');
+    
+    res.json(usuarios);
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
 // Rutas de configuración
 app.use('/api/configuracion', require('./routes/config'));

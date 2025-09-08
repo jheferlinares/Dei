@@ -356,8 +356,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function registrarReferido(e) {
     e.preventDefault();
     
-    // Verificar si el usuario tiene permisos de administrador
-    if (window.esUsuarioAdmin === false) {
+    // Verificar si el usuario tiene permisos de administrador o líder
+    if (window.esUsuarioAdmin === false && window.esUsuarioLider !== true) {
       alert('No tienes permisos para realizar esta acción');
       return;
     }
@@ -413,8 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Función para marcar un referido como cerrado
   async function cerrarReferido(id) {
-    // Verificar si el usuario tiene permisos de administrador
-    if (window.esUsuarioAdmin === false) {
+    // Verificar si el usuario tiene permisos de administrador o líder
+    if (window.esUsuarioAdmin === false && window.esUsuarioLider !== true) {
       alert('No tienes permisos para realizar esta acción');
       return;
     }
@@ -667,8 +667,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Columna de acciones
       const accionesCell = document.createElement('td');
       
-      // Solo mostrar botones de acción si el usuario es administrador
-      if (window.esUsuarioAdmin !== false) {
+      // Solo mostrar botones de acción si el usuario es administrador o líder
+      if (window.esUsuarioAdmin !== false || window.esUsuarioLider === true) {
         const cerrarBtn = document.createElement('button');
         cerrarBtn.className = 'action-btn cerrar';
         cerrarBtn.textContent = 'Cerrar';

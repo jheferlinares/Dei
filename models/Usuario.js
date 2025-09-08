@@ -18,7 +18,7 @@ const usuarioSchema = new mongoose.Schema({
   foto: String,
   rol: {
     type: String,
-    enum: ['usuario', 'admin'],
+    enum: ['usuario', 'admin', 'lider'],
     default: 'usuario'
   },
   fechaRegistro: {

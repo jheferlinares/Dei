@@ -31,14 +31,26 @@ exports.puedeEditar = (req, res, next) => {
   }
   
   if (req.isAuthenticated()) {
-    // Los administradores pueden editar
-    if (req.user.rol === 'admin') {
-      console.log('Usuario admin con permisos de edición:', req.user.email);
+    // Los administradores y líderes pueden editar
+    if (req.user.rol === 'admin' || req.user.rol === 'lider') {
+      console.log('Usuario con permisos de edición:', req.user.email, 'Rol:', req.user.rol);
       return next();
     }
-    console.log('Usuario sin rol admin:', req.user.email, 'Rol actual:', req.user.rol);
+    console.log('Usuario sin permisos de edición:', req.user.email, 'Rol actual:', req.user.rol);
   } else {
     console.log('Intento de edición sin autenticación');
   }
   res.status(403).json({ error: 'No tienes permisos para realizar esta acción.' });
+};
+
+// Middleware para verificar si es líder (solo puede agregar referidos)
+exports.esLider = (req, res, next) => {
+  if (process.env.NODE_ENV !== 'production') {
+    return next();
+  }
+  
+  if (req.isAuthenticated() && req.user.rol === 'lider') {
+    return next();
+  }
+  res.status(403).json({ error: 'Acceso denegado. Se requieren permisos de líder.' });
 };
