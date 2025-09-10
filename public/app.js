@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const consultarHistorialBtn = document.getElementById('consultarHistorialBtn');
   const exportarHistorialBtn = document.getElementById('exportarHistorialBtn');
   const corporativoCerradosBody = document.getElementById('corporativoCerradosBody');
+  const filtroMesSelect = document.getElementById('filtroMes');
   const corporativoChartContainer = document.getElementById('corporativoChartContainer');
   const reiniciarAñoCorporativoBtn = document.getElementById('reiniciarAñoCorporativoBtn');
   const liderStatsBody = document.getElementById('liderStatsBody');
@@ -71,7 +72,55 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => cambiarTab(btn.dataset.tab));
   });
   
+
+  
   nuevoReferidoForm.addEventListener('submit', registrarReferido);
+  
+  // Función para cargar mis referidos (estadísticas por líder)
+  async function cargarMisReferidos() {
+    try {
+      const response = await fetch('/api/referidos/por-lider');
+      const referidos = await response.json();
+      
+      actualizarTablaMisReferidos(referidos);
+      actualizarGrafico(referidos, document.getElementById('misReferidosChartContainer'));
+    } catch (error) {
+      console.error('Error al cargar mis referidos:', error);
+    }
+  }
+  
+  // Función para actualizar tabla de mis referidos
+  function actualizarTablaMisReferidos(referidos) {
+    const misReferidosBody = document.getElementById('misReferidosBody');
+    misReferidosBody.innerHTML = '';
+    
+    if (referidos.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 2;
+      cell.textContent = 'No hay referidos por líder';
+      cell.style.textAlign = 'center';
+      row.appendChild(cell);
+      misReferidosBody.appendChild(row);
+      return;
+    }
+    
+    referidos.sort((a, b) => b.cantidad - a.cantidad);
+    
+    referidos.forEach(referido => {
+      const row = document.createElement('tr');
+      
+      const liderCell = document.createElement('td');
+      liderCell.textContent = referido.nombreEmpleado;
+      
+      const cantidadCell = document.createElement('td');
+      cantidadCell.textContent = referido.cantidad;
+      
+      row.appendChild(liderCell);
+      row.appendChild(cantidadCell);
+      misReferidosBody.appendChild(row);
+    });
+  }
   reiniciarBtn.addEventListener('click', reiniciarDatos);
   searchBtn.addEventListener('click', buscarReferidos);
   searchInput.addEventListener('keypress', (e) => {
@@ -134,6 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
       consultarHistorial();
     });
   }
+  
+  // Event listener para filtro de mes
+  if (filtroMesSelect) {
+    filtroMesSelect.addEventListener('change', cargarReferidosCerrados);
+  }
 
   // Función para cambiar entre tabs
   function cambiarTab(tabId) {
@@ -164,6 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
       consultarHistorial();
     } else if (tabId === 'lider-stats') {
       cargarEstadisticasLider();
+    } else if (tabId === 'mis-referidos') {
+      cargarMisReferidos();
     }
   }
 
@@ -185,12 +241,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Función para cargar referidos cerrados
   async function cargarReferidosCerrados() {
     try {
-      // Obtener el tipo de producto seleccionado
+      // Obtener filtros
       const tipoProductoSelect = document.getElementById('filtroTipoProducto');
       const tipoProducto = tipoProductoSelect ? tipoProductoSelect.value : 'todos';
+      const mesSeleccionado = filtroMesSelect ? filtroMesSelect.value : '';
+      
+      // Construir URL con filtros
+      let url = `/api/referidos/cerrados?tipoProducto=${tipoProducto}`;
+      if (mesSeleccionado) {
+        url += `&mes=${mesSeleccionado}`;
+      }
       
       // Cargar resumen para el gráfico
-      const response = await fetch(`/api/referidos/cerrados?tipoProducto=${tipoProducto}`);
+      const response = await fetch(url);
       const referidos = await response.json();
       actualizarTablaCerrados(referidos);
       actualizarGrafico(referidos, chartContainer);
@@ -446,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      if (response.ok) {
+      if (response.status === 201 || response.ok) {
         const referidos = await response.json();
         actualizarTablaPendientes(referidos);
         
@@ -460,7 +523,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         alert('Referido registrado correctamente');
       } else {
-        throw new Error('Error al registrar referido');
+        const error = await response.json();
+        alert('Error: ' + (error.error || 'Error al registrar referido'));
       }
     } catch (error) {
       console.error('Error al registrar referido:', error);

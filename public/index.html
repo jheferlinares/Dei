@@ -27,6 +27,7 @@
       <button class="tab-btn" data-tab="cerrados">Referidos Cerrados</button>
       <button class="tab-btn" data-tab="año-corporativo">Año Corporativo</button>
       <button class="tab-btn" data-tab="historial">Historial</button>
+      <button class="tab-btn" data-tab="mis-referidos">Mis Referidos</button>
     </div>
     
     <!-- Tab de Referidos Pendientes -->
@@ -72,6 +73,7 @@
               <option value="Rubdith Gomez">Rubdith Gomez</option>
               <option value="Keila Criollo">Keila Criollo</option>
               <option value="Alfonzo Navarro">Alfonzo Navarro</option>
+              <option value="Yoaldrys Espina">Yoaldrys Espina</option>
             </select>
           </div>
           <div class="form-group">
@@ -132,7 +134,24 @@
             <img src="images/logo.png" alt="Logo Empresa" class="chart-logo">
             <h2>Referidos Cerrados de <span id="nombreMesActual">Mes</span></h2>
           </div>
-          <button id="editarMesBtn" class="btn btn-small">Editar Mes</button>
+          <div class="filtros-mes">
+            <select id="filtroMes">
+              <option value="">Mes Actual</option>
+              <option value="1">Enero</option>
+              <option value="2">Febrero</option>
+              <option value="3">Marzo</option>
+              <option value="4">Abril</option>
+              <option value="5">Mayo</option>
+              <option value="6">Junio</option>
+              <option value="7">Julio</option>
+              <option value="8">Agosto</option>
+              <option value="9">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
+            </select>
+            <button id="editarMesBtn" class="btn btn-small">Editar Mes</button>
+          </div>
         </div>
         <div class="stats-container">
           <div class="stat-box">
@@ -348,6 +367,28 @@
               </tr>
             </thead>
             <tbody id="liderStatsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tab de Mis Referidos -->
+    <div class="tab-content" id="mis-referidos-tab">
+      <div class="results-container">
+        <div class="header-with-logo chart-header">
+          <img src="images/logo.png" alt="Logo Empresa" class="chart-logo">
+          <h2>Referidos por Líder</h2>
+        </div>
+        <div class="chart-container" id="misReferidosChartContainer"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Líder</th>
+                <th>Referidos Cerrados</th>
+              </tr>
+            </thead>
+            <tbody id="misReferidosBody"></tbody>
           </table>
         </div>
       </div>

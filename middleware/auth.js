@@ -49,7 +49,7 @@ exports.esLider = (req, res, next) => {
     return next();
   }
   
-  if (req.isAuthenticated() && req.user.rol === 'lider') {
+  if (req.isAuthenticated() && (req.user.rol === 'lider' || req.user.rol === 'admin')) {
     return next();
   }
   res.status(403).json({ error: 'Acceso denegado. Se requieren permisos de líder.' });

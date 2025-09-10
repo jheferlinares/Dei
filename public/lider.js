@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const paisCell = document.createElement('td');
       paisCell.textContent = referido.paisEmpleado;
       
-      // Columna de supervisor
+      // Columna de líder
       const supervisorCell = document.createElement('td');
       supervisorCell.textContent = referido.nombreSupervisor || 'No especificado';
       

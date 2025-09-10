@@ -470,6 +470,7 @@ app.get('/api/referidos/buscar', async (req, res) => {
       $or: [
         { nombreCliente: { $regex: termino, $options: 'i' } },
         { nombreEmpleado: { $regex: termino, $options: 'i' } },
+        { nombreLider: { $regex: termino, $options: 'i' } },
         { nombreSupervisor: { $regex: termino, $options: 'i' } }
       ]
     }).sort({ fechaEnvio: -1 });
@@ -496,6 +497,7 @@ app.get('/api/referidos/cerrados/buscar', async (req, res) => {
       $or: [
         { nombreCliente: { $regex: termino, $options: 'i' } },
         { nombreEmpleado: { $regex: termino, $options: 'i' } },
+        { nombreLider: { $regex: termino, $options: 'i' } },
         { nombreSupervisor: { $regex: termino, $options: 'i' } }
       ]
     }).sort({ fechaCierre: -1 });
@@ -546,6 +548,7 @@ app.get('/api/ano-corporativo/buscar', async (req, res) => {
       $or: [
         { nombreCliente: { $regex: termino, $options: 'i' } },
         { nombreEmpleado: { $regex: termino, $options: 'i' } },
+        { nombreLider: { $regex: termino, $options: 'i' } },
         { nombreSupervisor: { $regex: termino, $options: 'i' } }
       ]
     });
@@ -592,6 +595,7 @@ app.get('/api/historial/buscar', async (req, res) => {
       $or: [
         { nombreCliente: { $regex: termino, $options: 'i' } },
         { nombreEmpleado: { $regex: termino, $options: 'i' } },
+        { nombreLider: { $regex: termino, $options: 'i' } },
         { nombreSupervisor: { $regex: termino, $options: 'i' } }
       ]
     }).sort({ fechaCierre: -1 });
@@ -663,6 +667,7 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
         nombreCliente,
         nombreEmpleado,
         paisEmpleado,
+        nombreSupervisor: nombreLider, // Para compatibilidad
         nombreLider,
         tipoEnvio: tipoEnvio || 'linea',
         tipoProducto: 'vida',
@@ -803,7 +808,7 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
         nombreCliente: referido.nombreCliente,
         nombreEmpleado: referido.nombreEmpleado,
         paisEmpleado: referido.paisEmpleado,
-        nombreSupervisor: referido.nombreSupervisor || 'No especificado',
+        nombreSupervisor: referido.nombreLider || referido.nombreSupervisor || 'No especificado',
         fechaEnvio: referido.fechaEnvio,
         fechaCierre: referido.fechaCierre,
         tipoEnvio: referido.tipoEnvio,
@@ -839,6 +844,11 @@ app.get('/login', (req, res) => {
 // Ruta principal (protegida)
 app.get('/', estaAutenticado, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Ruta para vista de líder (accesible por líderes y administradores)
+app.get('/lider', estaAutenticado, esLider, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'lider.html'));
 });
 
 // Ruta catch-all para debugging

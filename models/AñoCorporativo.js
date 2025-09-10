@@ -25,8 +25,15 @@ const añoCorporativoSchema = new mongoose.Schema({
     trim: true
   },
   
-  // Información del supervisor
+  // Información del supervisor (mantener para compatibilidad)
   nombreSupervisor: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  
+  // Información del líder
+  nombreLider: {
     type: String,
     required: true,
     trim: true
