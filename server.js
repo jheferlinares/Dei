@@ -347,6 +347,48 @@ function obtenerTrimestreCorporativo(fecha) {
   if (mes >= 3 && mes <= 5) return 4; // Abril, Mayo, Junio
 }
 
+// Obtener estadísticas por líder
+app.get('/api/referidos/por-lider', async (req, res) => {
+  try {
+    const referidos = await Referido.find({ cerrado: true });
+    
+    // Agrupar por líder, contando referidos de cada empleado
+    const lideresMap = {};
+    
+    referidos.forEach(referido => {
+      const lider = referido.nombreLider || referido.nombreSupervisor || 'Sin Líder';
+      const empleado = referido.nombreEmpleado;
+      
+      if (!lideresMap[lider]) {
+        lideresMap[lider] = {
+          nombreLider: lider,
+          empleados: {},
+          totalReferidos: 0
+        };
+      }
+      
+      if (!lideresMap[lider].empleados[empleado]) {
+        lideresMap[lider].empleados[empleado] = 0;
+      }
+      
+      lideresMap[lider].empleados[empleado]++;
+      lideresMap[lider].totalReferidos++;
+    });
+    
+    // Convertir a formato para gráfica (como empleados)
+    const resultado = Object.values(lideresMap).map(lider => ({
+      _id: lider.nombreLider,
+      nombreEmpleado: lider.nombreLider, // Para compatibilidad con la gráfica
+      cantidad: lider.totalReferidos
+    }));
+    
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error al obtener referidos por líder:', error);
+    res.status(500).json({ error: 'Error al obtener referidos por líder' });
+  }
+});
+
 // Obtener referidos del año corporativo
 app.get('/api/ano-corporativo/cerrados', async (req, res) => {
   try {
@@ -586,9 +628,9 @@ app.get('/api/historial/buscar', async (req, res) => {
 
 // Agregar un nuevo referido (requiere autenticación y permisos de edición)
 app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
-  const { nombreCliente, nombreEmpleado, paisEmpleado, nombreSupervisor, tipoEnvio, tipoProducto } = req.body;
+  const { numeroCliente, nombreCliente, nombreEmpleado, paisEmpleado, nombreLider, tipoEnvio, tipoProducto } = req.body;
   
-  if (!nombreCliente || !nombreEmpleado || !paisEmpleado || !nombreSupervisor) {
+  if (!numeroCliente || !nombreCliente || !nombreEmpleado || !paisEmpleado || !nombreLider) {
     return res.status(400).json({ error: 'Se requieren todos los campos' });
   }
 
@@ -598,10 +640,11 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
     
     // Crear nuevo referido
     const nuevoReferido = new Referido({
+      numeroCliente,
       nombreCliente,
       nombreEmpleado,
       paisEmpleado,
-      nombreSupervisor,
+      nombreLider,
       tipoEnvio: tipoEnvio || 'linea',
       tipoProducto: tipoProductoFinal,
       fechaEnvio: fechaActual,
@@ -616,10 +659,11 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
       const añoCorporativo = fechaActual.getFullYear();
       
       const referidoCorporativo = new AñoCorporativo({
+        numeroCliente,
         nombreCliente,
         nombreEmpleado,
         paisEmpleado,
-        nombreSupervisor,
+        nombreLider,
         tipoEnvio: tipoEnvio || 'linea',
         tipoProducto: 'vida',
         fechaEnvio: fechaActual,
@@ -755,6 +799,7 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
       await new HistorialReferido({
         mes: mes + 1, // Corregir: mes va de 0-11, pero queremos 1-12
         año,
+        numeroCliente: referido.numeroCliente || 'N/A',
         nombreCliente: referido.nombreCliente,
         nombreEmpleado: referido.nombreEmpleado,
         paisEmpleado: referido.paisEmpleado,

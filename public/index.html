@@ -47,6 +47,10 @@
           </div>
 
           <div class="form-group">
+            <label for="numeroCliente">Número del Cliente:</label>
+            <input type="text" id="numeroCliente" required>
+          </div>
+          <div class="form-group">
             <label for="nombreCliente">Nombre del Cliente:</label>
             <input type="text" id="nombreCliente" required>
           </div>
@@ -59,8 +63,16 @@
             <input type="text" id="paisEmpleado" required>
           </div>
           <div class="form-group">
-            <label for="nombreSupervisor">Nombre del Supervisor:</label>
-            <input type="text" id="nombreSupervisor" required>
+            <label for="nombreLider">Nombre del Líder:</label>
+            <select id="nombreLider" required>
+              <option value="">Seleccionar Líder</option>
+              <option value="Yohanni Beltre">Yohanni Beltre</option>
+              <option value="Brigetle Guerrero">Brigetle Guerrero</option>
+              <option value="Ashley Amparo">Ashley Amparo</option>
+              <option value="Rubdith Gomez">Rubdith Gomez</option>
+              <option value="Keila Criollo">Keila Criollo</option>
+              <option value="Alfonzo Navarro">Alfonzo Navarro</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Tipo de Envío:</label>
@@ -91,10 +103,11 @@
           <table>
             <thead>
               <tr>
+                <th>Número</th>
                 <th>Cliente</th>
                 <th>Empleado</th>
                 <th>País</th>
-                <th>Supervisor</th>
+                <th>Líder</th>
                 <th>Fecha Envío</th>
                 <th>Tipo</th>
                 <th>Producto</th>
@@ -313,6 +326,28 @@
               </tr>
             </thead>
             <tbody id="historialDetalleBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tab especial para Líderes -->
+    <div class="tab-content" id="lider-stats-tab">
+      <div class="results-container">
+        <div class="header-with-logo chart-header">
+          <img src="images/logo.png" alt="Logo Empresa" class="chart-logo">
+          <h2>Referidos por Líder</h2>
+        </div>
+        <div class="chart-container" id="liderChartContainer"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Líder</th>
+                <th>Referidos Cerrados</th>
+              </tr>
+            </thead>
+            <tbody id="liderStatsBody"></tbody>
           </table>
         </div>
       </div>

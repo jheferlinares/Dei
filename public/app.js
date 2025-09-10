@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const corporativoCerradosBody = document.getElementById('corporativoCerradosBody');
   const corporativoChartContainer = document.getElementById('corporativoChartContainer');
   const reiniciarAñoCorporativoBtn = document.getElementById('reiniciarAñoCorporativoBtn');
+  const liderStatsBody = document.getElementById('liderStatsBody');
+  const liderChartContainer = document.getElementById('liderChartContainer');
   
   // Referencias para búsquedas
   const searchCerradosInput = document.getElementById('searchCerradosInput');
@@ -160,6 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
       cargarAñoCorporativo();
     } else if (tabId === 'historial') {
       consultarHistorial();
+    } else if (tabId === 'lider-stats') {
+      cargarEstadisticasLider();
     }
   }
 
@@ -228,6 +232,51 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Error al cargar referidos cerrados:', error);
     }
+  }
+
+  // Función para cargar estadísticas por líder
+  window.cargarEstadisticasLider = async function() {
+    try {
+      const response = await fetch('/api/referidos/por-lider');
+      const referidos = await response.json();
+      
+      actualizarTablaLider(referidos);
+      actualizarGrafico(referidos, liderChartContainer);
+    } catch (error) {
+      console.error('Error al cargar estadísticas por líder:', error);
+    }
+  }
+
+  // Función para actualizar tabla de líderes
+  function actualizarTablaLider(referidos) {
+    liderStatsBody.innerHTML = '';
+    
+    if (referidos.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 2;
+      cell.textContent = 'No hay referidos por líder';
+      cell.style.textAlign = 'center';
+      row.appendChild(cell);
+      liderStatsBody.appendChild(row);
+      return;
+    }
+    
+    referidos.sort((a, b) => b.cantidad - a.cantidad);
+    
+    referidos.forEach(referido => {
+      const row = document.createElement('tr');
+      
+      const liderCell = document.createElement('td');
+      liderCell.textContent = referido.nombreEmpleado; // Usa nombreEmpleado que contiene el nombre del líder
+      
+      const cantidadCell = document.createElement('td');
+      cantidadCell.textContent = referido.cantidad;
+      
+      row.appendChild(liderCell);
+      row.appendChild(cantidadCell);
+      liderStatsBody.appendChild(row);
+    });
   }
 
   // Función para cargar año corporativo
@@ -362,14 +411,15 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
+    const numeroCliente = document.getElementById('numeroCliente').value.trim();
     const nombreCliente = nombreClienteInput.value.trim();
     const nombreEmpleado = nombreEmpleadoInput.value.trim();
     const paisEmpleado = paisEmpleadoInput.value.trim();
-    const nombreSupervisor = nombreSupervisorInput.value.trim();
+    const nombreLider = document.getElementById('nombreLider').value.trim();
     const tipoEnvio = document.querySelector('input[name="tipoEnvio"]:checked').value;
     const tipoProducto = document.getElementById('tipoProducto').value;
 
-    if (!nombreCliente || !nombreEmpleado || !paisEmpleado || !nombreSupervisor) {
+    if (!numeroCliente || !nombreCliente || !nombreEmpleado || !paisEmpleado || !nombreLider) {
       alert('Por favor completa todos los campos');
       return;
     }
@@ -381,10 +431,11 @@ document.addEventListener('DOMContentLoaded', () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          numeroCliente,
           nombreCliente,
           nombreEmpleado,
           paisEmpleado,
-          nombreSupervisor,
+          nombreLider,
           tipoEnvio,
           tipoProducto
         })
@@ -395,17 +446,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      const referidos = await response.json();
-      actualizarTablaPendientes(referidos);
-      
-      // Limpiar formulario
-      nombreClienteInput.value = '';
-      nombreEmpleadoInput.value = '';
-      paisEmpleadoInput.value = '';
-      nombreSupervisorInput.value = '';
-      document.querySelector('input[value="linea"]').checked = true;
-      
-      alert('Referido registrado correctamente');
+      if (response.ok) {
+        const referidos = await response.json();
+        actualizarTablaPendientes(referidos);
+        
+        // Limpiar formulario
+        document.getElementById('numeroCliente').value = '';
+        nombreClienteInput.value = '';
+        nombreEmpleadoInput.value = '';
+        paisEmpleadoInput.value = '';
+        document.getElementById('nombreLider').value = '';
+        document.querySelector('input[value="linea"]').checked = true;
+        
+        alert('Referido registrado correctamente');
+      } else {
+        throw new Error('Error al registrar referido');
+      }
     } catch (error) {
       console.error('Error al registrar referido:', error);
     }
@@ -625,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (referidos.length === 0) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 8; // Aumentado a 8 para incluir supervisor
+      cell.colSpan = 9; // Aumentado a 9 para incluir número
       cell.textContent = 'No hay referidos pendientes';
       cell.style.textAlign = 'center';
       row.appendChild(cell);
@@ -635,6 +691,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     referidos.forEach(referido => {
       const row = document.createElement('tr');
+      
+      // Columna de número
+      const numeroCell = document.createElement('td');
+      numeroCell.textContent = referido.numeroCliente || 'N/A';
       
       // Columna de cliente
       const clienteCell = document.createElement('td');
@@ -648,9 +708,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const paisCell = document.createElement('td');
       paisCell.textContent = referido.paisEmpleado;
       
-      // Columna de supervisor
-      const supervisorCell = document.createElement('td');
-      supervisorCell.textContent = referido.nombreSupervisor || 'No especificado';
+      // Columna de líder
+      const liderCell = document.createElement('td');
+      liderCell.textContent = referido.nombreLider || referido.nombreSupervisor || 'No especificado';
       
       // Columna de fecha
       const fechaCell = document.createElement('td');
@@ -688,10 +748,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       // Agregar celdas a la fila
+      row.appendChild(numeroCell);
       row.appendChild(clienteCell);
       row.appendChild(empleadoCell);
       row.appendChild(paisCell);
-      row.appendChild(supervisorCell);
+      row.appendChild(liderCell);
       row.appendChild(fechaCell);
       row.appendChild(tipoCell);
       row.appendChild(productoCell);

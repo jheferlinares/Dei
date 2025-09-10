@@ -70,11 +70,73 @@ function configurarPermisos(usuario) {
   window.esUsuarioLider = esLider;
   
   if (esLider && !esAdmin) {
-    // Líderes: Solo pueden ver referidos pendientes
+    // Líderes: Pueden agregar referidos y ver todas las gráficas (sin editar)
     
-    // Ocultar TODOS los tabs excepto pendientes
+    // Ocultar botones de reinicio (no pueden editar)
+    const elementosAdmin = [
+      document.getElementById('reiniciarBtn'),
+      document.getElementById('reiniciarAñoCorporativoBtn')
+    ];
+    
+    elementosAdmin.forEach(elemento => {
+      if (elemento) {
+        elemento.style.display = 'none';
+      }
+    });
+    
+    // Agregar tab especial para líderes
+    const tabsContainer = document.querySelector('.tabs');
+    const liderTab = document.createElement('button');
+    liderTab.className = 'tab-btn';
+    liderTab.setAttribute('data-tab', 'lider-stats');
+    liderTab.textContent = 'Mis Referidos';
+    liderTab.addEventListener('click', () => {
+      // Actualizar botones
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      liderTab.classList.add('active');
+      
+      // Actualizar contenido
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById('lider-stats-tab').classList.add('active');
+      
+      // Cargar datos
+      if (window.cargarEstadisticasLider) {
+        window.cargarEstadisticasLider();
+      }
+    });
+    tabsContainer.appendChild(liderTab);
+    
+    // Mostrar mensaje para líderes
+    const mensajeLider = document.createElement('div');
+    mensajeLider.className = 'info-message lider';
+    mensajeLider.textContent = 'Panel de Líder: Puedes agregar referidos y ver todas las estadísticas.';
+    
+    document.querySelector('.container').insertBefore(
+      mensajeLider,
+      document.querySelector('.tabs')
+    );
+    
+  } else if (!esAdmin && !esLider) {
+    // Usuarios normales: Solo pueden ver gráfica de referidos cerrados del mes
+    const elementosOcultos = [
+      document.getElementById('nuevoReferidoForm'),
+      document.getElementById('reiniciarBtn'),
+      document.getElementById('reiniciarAñoCorporativoBtn')
+    ];
+    
+    elementosOcultos.forEach(elemento => {
+      if (elemento) {
+        elemento.style.display = 'none';
+      }
+    });
+    
+    // Ocultar TODOS los tabs excepto cerrados
     const tabsRestringidos = [
-      document.querySelector('[data-tab="cerrados"]'),
+      document.querySelector('[data-tab="pendientes"]'),
       document.querySelector('[data-tab="año-corporativo"]'),
       document.querySelector('[data-tab="historial"]')
     ];
@@ -85,36 +147,36 @@ function configurarPermisos(usuario) {
       }
     });
     
-    // Mostrar mensaje para líderes
-    const mensajeLider = document.createElement('div');
-    mensajeLider.className = 'info-message lider';
-    mensajeLider.textContent = 'Panel de Líder: Solo puedes agregar y gestionar referidos pendientes.';
+    // Activar tab de cerrados por defecto
+    document.querySelector('[data-tab="cerrados"]').click();
     
-    document.querySelector('.container').insertBefore(
-      mensajeLider,
-      document.querySelector('.tabs')
-    );
-    
-  } else if (!esAdmin && !esLider) {
-    // Usuarios normales: Solo lectura
-    const elementosEdicion = [
-      document.getElementById('nuevoReferidoForm'),
-      document.getElementById('reiniciarBtn'),
-      document.getElementById('reiniciarAñoCorporativoBtn')
-    ];
-    
-    elementosEdicion.forEach(elemento => {
-      if (elemento) {
-        elemento.style.display = 'none';
+    // Ocultar elementos innecesarios para usuarios
+    setTimeout(() => {
+      // Ocultar sección de búsqueda
+      const searchSection = document.querySelector('#cerrados-tab .search-container');
+      if (searchSection) {
+        searchSection.style.display = 'none';
       }
-    });
+      
+      // Ocultar título y tabla de detalle
+      const detalleTitle = document.querySelector('#cerrados-tab h3');
+      if (detalleTitle) {
+        detalleTitle.style.display = 'none';
+      }
+      
+      // Ocultar tabla de detalle de referidos cerrados
+      const tablaDetalle = document.querySelector('#cerradosDetalleBody');
+      if (tablaDetalle && tablaDetalle.closest('.table-container')) {
+        tablaDetalle.closest('.table-container').style.display = 'none';
+      }
+    }, 100);
     
-    const mensajeNoPermisos = document.createElement('div');
-    mensajeNoPermisos.className = 'info-message';
-    mensajeNoPermisos.textContent = 'Modo de solo lectura. Contacte a un administrador para realizar cambios.';
+    const mensajeUsuario = document.createElement('div');
+    mensajeUsuario.className = 'info-message';
+    mensajeUsuario.textContent = 'Usuario: Solo puedes ver las estadísticas de referidos cerrados del mes.';
     
     document.querySelector('.container').insertBefore(
-      mensajeNoPermisos,
+      mensajeUsuario,
       document.querySelector('.tabs')
     );
   }

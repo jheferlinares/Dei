@@ -17,6 +17,11 @@ const historialReferidoSchema = new mongoose.Schema({
     min: 1,
     max: 4
   },
+  numeroCliente: {
+    type: String,
+    required: true,
+    trim: true
+  },
   nombreCliente: {
     type: String,
     required: true,

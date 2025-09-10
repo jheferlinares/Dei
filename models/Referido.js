@@ -5,6 +5,11 @@ mongoose.set('debug', true);
 
 const referidoSchema = new mongoose.Schema({
   // Información del cliente
+  numeroCliente: {
+    type: String,
+    required: true,
+    trim: true
+  },
   nombreCliente: {
     type: String,
     required: true,
@@ -23,8 +28,14 @@ const referidoSchema = new mongoose.Schema({
     trim: true
   },
   
-  // Información del supervisor
+  // Información del supervisor (mantener para compatibilidad)
   nombreSupervisor: {
+    type: String,
+    trim: true
+  },
+  
+  // Información del líder
+  nombreLider: {
     type: String,
     required: true,
     trim: true

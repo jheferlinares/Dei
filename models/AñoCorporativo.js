@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const añoCorporativoSchema = new mongoose.Schema({
   // Información del cliente
+  numeroCliente: {
+    type: String,
+    required: true,
+    trim: true
+  },
   nombreCliente: {
     type: String,
     required: true,
