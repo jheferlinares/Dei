@@ -533,8 +533,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Función para marcar un referido como cerrado
   async function cerrarReferido(id) {
-    // Verificar si el usuario tiene permisos de administrador o líder
-    if (window.esUsuarioAdmin === false && window.esUsuarioLider !== true) {
+    // Verificar si el usuario tiene permisos de administrador
+    if (window.esUsuarioAdmin === false) {
       alert('No tienes permisos para realizar esta acción');
       return;
     }
@@ -791,8 +791,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Columna de acciones
       const accionesCell = document.createElement('td');
       
-      // Solo mostrar botones de acción si el usuario es administrador o líder
-      if (window.esUsuarioAdmin !== false || window.esUsuarioLider === true) {
+      // Solo mostrar botones de acción si el usuario es administrador
+      if (window.esUsuarioAdmin !== false) {
         const cerrarBtn = document.createElement('button');
         cerrarBtn.className = 'action-btn cerrar';
         cerrarBtn.textContent = 'Cerrar';
@@ -890,7 +890,7 @@ document.addEventListener('DOMContentLoaded', () => {
       empleadoCell.textContent = referido.nombreEmpleado;
       
       const supervisorCell = document.createElement('td');
-      supervisorCell.textContent = referido.nombreSupervisor || 'No especificado';
+      supervisorCell.textContent = referido.nombreLider || referido.nombreSupervisor || 'No especificado';
       
       const fechaEnvioCell = document.createElement('td');
       fechaEnvioCell.textContent = new Date(referido.fechaEnvio).toLocaleDateString();
@@ -987,7 +987,7 @@ document.addEventListener('DOMContentLoaded', () => {
       empleadoCell.textContent = referido.nombreEmpleado;
       
       const supervisorCell = document.createElement('td');
-      supervisorCell.textContent = referido.nombreSupervisor || 'No especificado';
+      supervisorCell.textContent = referido.nombreLider || referido.nombreSupervisor || 'No especificado';
       
       const fechaEnvioCell = document.createElement('td');
       fechaEnvioCell.textContent = new Date(referido.fechaEnvio).toLocaleDateString();
