@@ -17,9 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabContents = document.querySelectorAll('.tab-content');
   const nuevoReferidoForm = document.getElementById('nuevoReferidoForm');
   const nombreClienteInput = document.getElementById('nombreCliente');
-  const nombreEmpleadoInput = document.getElementById('nombreEmpleado');
-  const paisEmpleadoInput = document.getElementById('paisEmpleado');
-  const nombreSupervisorInput = document.getElementById('nombreSupervisor');
+  const nombreEmpleadoSelect = document.getElementById('nombreEmpleado');
+  const paisEmpleadoSelect = document.getElementById('paisEmpleado');
+  const nombreLiderSelect = document.getElementById('nombreLider');
+  
+  // Añadir event listener para cambio de líder
+  if (nombreLiderSelect) {
+    nombreLiderSelect.addEventListener('change', (e) => {
+      if (window.cargarEmpleadosPorLider) {
+        window.cargarEmpleadosPorLider(e.target.value);
+      }
+    });
+  }
   const tipoProductoSelect = document.getElementById('tipoProducto');
   const pendientesBody = document.getElementById('pendientesBody');
   const cerradosBody = document.getElementById('cerradosBody');
@@ -476,9 +485,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const numeroCliente = document.getElementById('numeroCliente').value.trim();
     const nombreCliente = nombreClienteInput.value.trim();
-    const nombreEmpleado = nombreEmpleadoInput.value.trim();
-    const paisEmpleado = paisEmpleadoInput.value.trim();
-    const nombreLider = document.getElementById('nombreLider').value.trim();
+    const nombreEmpleado = nombreEmpleadoSelect.value.trim();
+    const paisEmpleado = paisEmpleadoSelect.value.trim();
+    const nombreLider = nombreLiderSelect.value.trim();
     const tipoEnvio = document.querySelector('input[name="tipoEnvio"]:checked').value;
     const tipoProducto = document.getElementById('tipoProducto').value;
 
@@ -516,9 +525,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Limpiar formulario
         document.getElementById('numeroCliente').value = '';
         nombreClienteInput.value = '';
-        nombreEmpleadoInput.value = '';
-        paisEmpleadoInput.value = '';
-        document.getElementById('nombreLider').value = '';
+        nombreEmpleadoSelect.selectedIndex = 0;
+        paisEmpleadoSelect.selectedIndex = 0;
+        nombreLiderSelect.selectedIndex = 0;
         document.querySelector('input[value="linea"]').checked = true;
         
         alert('Referido registrado correctamente');
