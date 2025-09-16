@@ -92,6 +92,7 @@ const empleadosPorLider = {
     'Esther Abreu',
     'Franklyn Almonte',
     'Lovely Concepcion',
+    'Michel Caro',
     'Yessica Pacheco',
     'Eliana Perez',
     'Zeilic Hernandez',
