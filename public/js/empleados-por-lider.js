@@ -83,6 +83,29 @@ const empleadosPorLider = {
   'Yoaldrys Espina': [
     'Yoaldrys Espina',
     'Francisco Abreu'
+  ],
+  
+  'Empleados Adicionales': [
+    'Angelica Suarez',
+    'Chackie Polanco',
+    'Crismely Rubert',
+    'Esther Abreu',
+    'Franklyn Almonte',
+    'Lovely Concepcion',
+    'Yessica Pacheco',
+    'Eliana Perez',
+    'Zeilic Hernandez',
+    'Yafreisy Ramirez',
+    'Fanny Rojas',
+    'Lisbeth Rincon',
+    'Yeyder Diaz',
+    'Elizabeth Cabrera',
+    'Cristal Reyes',
+    'Stacey Ortiz',
+    'Joneli Santos',
+    'Marianny Fajardo',
+    'Anais Valdez',
+    'Olider Veras'
   ]
 };
 
@@ -122,13 +145,8 @@ window.cargarEmpleadosPorLider = function(lider) {
   const empleadoSelect = document.getElementById('nombreEmpleado');
   empleadoSelect.innerHTML = '<option value="">Seleccionar Empleado</option>';
   
-  let empleados = [];
-  
-  if (lider && empleadosPorLider[lider]) {
-    empleados = empleadosPorLider[lider];
-  } else {
-    empleados = obtenerTodosLosEmpleados();
-  }
+  // Siempre mostrar todos los empleados sin importar el líder
+  const empleados = obtenerTodosLosEmpleados();
   
   empleados.forEach(empleado => {
     const option = document.createElement('option');
