@@ -215,6 +215,13 @@ input, select {
   width: 100%;
 }
 
+/* Centrar gráfico de Mis Referidos cuando hay pocos líderes */
+#misReferidosChartContainer {
+  justify-content: center;
+  padding-left: 300px;
+  padding-right: 300px;
+}
+
 .chart-bar {
   display: flex;
   flex-direction: column;
