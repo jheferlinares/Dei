@@ -90,6 +90,7 @@ const empleadosPorLider = {
     'Chackie Polanco',
     'Crismely Rubert',
     'Esther Abreu',
+    'Esther Matos',
     'Franklyn Almonte',
     'Lovely Concepcion',
     'Michel Caro',
