@@ -139,6 +139,8 @@ function obtenerTodosLosEmpleados() {
   Object.values(empleadosPorLider).forEach(empleados => {
     empleados.forEach(empleado => todosEmpleados.add(empleado));
   });
+  // Añadir empleados adicionales
+  todosEmpleados.add('Maicol Muñoz');
   return Array.from(todosEmpleados).sort();
 }
 
