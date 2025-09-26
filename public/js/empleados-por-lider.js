@@ -91,6 +91,7 @@ const empleadosPorLider = {
     'Crismely Rubert',
     'Esther Abreu',
     'Esther Matos',
+    'Eyla Castillo',
     'Franklyn Almonte',
     'Lovely Concepcion',
     'Michel Caro',
