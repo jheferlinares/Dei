@@ -141,6 +141,12 @@ function obtenerTodosLosEmpleados() {
   });
   // Añadir empleados adicionales
   todosEmpleados.add('Maicol Muñoz');
+  todosEmpleados.add('Belgica Guanipa');
+  todosEmpleados.add('Heber Davila');
+  todosEmpleados.add('Karla Betinez');
+  todosEmpleados.add('Ybelise Teran');
+  todosEmpleados.add('Omar Fonseca');
+  todosEmpleados.add('Hector Espejo');
   return Array.from(todosEmpleados).sort();
 }
 
