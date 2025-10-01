@@ -802,7 +802,7 @@ app.post('/api/reiniciar', estaAutenticado, puedeEditar, async (req, res) => {
     // Guardar cada referido en el historial
     for (const referido of referidosCerrados) {
       await new HistorialReferido({
-        mes: mes + 1, // Corregir: mes va de 0-11, pero queremos 1-12
+        mes: mes + 1, // mes va de 0-11, convertir a 1-12
         año,
         numeroCliente: referido.numeroCliente || 'N/A',
         nombreCliente: referido.nombreCliente,
