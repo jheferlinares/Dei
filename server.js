@@ -389,12 +389,50 @@ app.get('/api/referidos/por-lider', async (req, res) => {
   }
 });
 
-// Obtener referidos del año corporativo
+// Obtener referidos del año corporativo (solo trimestre 1: julio, agosto, septiembre)
 app.get('/api/ano-corporativo/cerrados', async (req, res) => {
   try {
-    console.log('Consultando referidos del año corporativo...');
-    const referidos = await AñoCorporativo.find({ cerrado: true });
-    console.log(`Encontrados ${referidos.length} referidos cerrados en el año corporativo`);
+    const tipoProducto = req.query.tipoProducto || 'todos';
+    console.log('Consultando referidos del año corporativo (trimestre 1) con filtro:', tipoProducto);
+    
+    let filtro = { 
+      cerrado: true,
+      trimestreCorporativo: 1 // Solo julio, agosto, septiembre
+    };
+    
+    // Aplicar filtros de tipo de producto
+    if (tipoProducto === 'concurso') {
+      filtro.$or = [
+        { tipoProducto: 'casa' },
+        { tipoProducto: 'auto' },
+        { tipoProducto: 'comercial' }
+      ];
+    } else if (tipoProducto !== 'todos') {
+      if (tipoProducto === 'vida') {
+        filtro.$or = [
+          { tipoProducto: 'vida' },
+          { tipoProducto: { $exists: false } }
+        ];
+        // Mantener el filtro de trimestre
+        filtro = {
+          $and: [
+            { trimestreCorporativo: 1 },
+            { cerrado: true },
+            {
+              $or: [
+                { tipoProducto: 'vida' },
+                { tipoProducto: { $exists: false } }
+              ]
+            }
+          ]
+        };
+      } else {
+        filtro.tipoProducto = tipoProducto;
+      }
+    }
+    
+    const referidos = await AñoCorporativo.find(filtro);
+    console.log(`Encontrados ${referidos.length} referidos cerrados en el año corporativo (trimestre 1)`);
     
     // Agrupar por empleado
     const referidosPorEmpleado = [];
@@ -409,7 +447,8 @@ app.get('/api/ano-corporativo/cerrados', async (req, res) => {
         empleadosMap[nombreEmpleado] = {
           _id: referido._id,
           nombreEmpleado,
-          cantidad: 1
+          cantidad: 1,
+          tipoProducto: tipoProducto === 'concurso' ? 'concurso' : referido.tipoProducto
         };
         referidosPorEmpleado.push(empleadosMap[nombreEmpleado]);
       }
@@ -423,16 +462,70 @@ app.get('/api/ano-corporativo/cerrados', async (req, res) => {
   }
 });
 
-// Obtener estadísticas del año corporativo
+// Obtener estadísticas del año corporativo (solo trimestre 1: julio, agosto, septiembre)
 app.get('/api/ano-corporativo/estadisticas', async (req, res) => {
   try {
-    console.log('Consultando estadísticas del año corporativo...');
-    const totalCerrados = await AñoCorporativo.countDocuments({ cerrado: true });
-    const totalEnviados = await AñoCorporativo.countDocuments();
+    const tipoProducto = req.query.tipoProducto || 'todos';
+    console.log('Consultando estadísticas del año corporativo (trimestre 1) con filtro:', tipoProducto);
     
-    console.log(`Estadísticas: ${totalCerrados} cerrados, ${totalEnviados} enviados`);
+    let filtroCerrados = { 
+      cerrado: true,
+      trimestreCorporativo: 1 // Solo julio, agosto, septiembre
+    };
+    let filtroEnviados = {
+      trimestreCorporativo: 1 // Solo julio, agosto, septiembre
+    };
+    
+    // Aplicar filtros de tipo de producto
+    if (tipoProducto === 'concurso') {
+      filtroCerrados.$or = [
+        { tipoProducto: 'casa' },
+        { tipoProducto: 'auto' },
+        { tipoProducto: 'comercial' }
+      ];
+      filtroEnviados.$or = [
+        { tipoProducto: 'casa' },
+        { tipoProducto: 'auto' },
+        { tipoProducto: 'comercial' }
+      ];
+    } else if (tipoProducto !== 'todos') {
+      if (tipoProducto === 'vida') {
+        filtroCerrados = {
+          $and: [
+            { trimestreCorporativo: 1 },
+            { cerrado: true },
+            {
+              $or: [
+                { tipoProducto: 'vida' },
+                { tipoProducto: { $exists: false } }
+              ]
+            }
+          ]
+        };
+        filtroEnviados = {
+          $and: [
+            { trimestreCorporativo: 1 },
+            {
+              $or: [
+                { tipoProducto: 'vida' },
+                { tipoProducto: { $exists: false } }
+              ]
+            }
+          ]
+        };
+      } else {
+        filtroCerrados.tipoProducto = tipoProducto;
+        filtroEnviados.tipoProducto = tipoProducto;
+      }
+    }
+    
+    const totalCerrados = await AñoCorporativo.countDocuments(filtroCerrados);
+    const totalEnviados = await AñoCorporativo.countDocuments(filtroEnviados);
+    
+    console.log(`Estadísticas trimestre 1: ${totalCerrados} cerrados, ${totalEnviados} enviados`);
     
     res.json({
+      tipoProducto,
       totalCerrados,
       totalEnviados
     });
@@ -533,27 +626,60 @@ app.get('/api/referidos/cerrados/buscar', async (req, res) => {
   }
 });
 
-// Buscar en año corporativo
+// Buscar en año corporativo (solo trimestre 1: julio, agosto, septiembre)
 app.get('/api/ano-corporativo/buscar', async (req, res) => {
-  const { termino } = req.query;
-  console.log('Búsqueda en corporativo con término:', termino);
+  const { termino, tipoProducto } = req.query;
+  console.log('Búsqueda en corporativo (trimestre 1) con término:', termino, 'y filtro:', tipoProducto);
   
   if (!termino) {
     return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
   }
   
   try {
-    const referidos = await AñoCorporativo.find({
+    let filtro = {
       cerrado: true,
+      trimestreCorporativo: 1, // Solo julio, agosto, septiembre
       $or: [
         { nombreCliente: { $regex: termino, $options: 'i' } },
         { nombreEmpleado: { $regex: termino, $options: 'i' } },
         { nombreLider: { $regex: termino, $options: 'i' } },
         { nombreSupervisor: { $regex: termino, $options: 'i' } }
       ]
-    });
+    };
     
-    console.log(`Encontrados ${referidos.length} referidos corporativos`);
+    // Aplicar filtro de tipo de producto si se especifica
+    if (tipoProducto && tipoProducto !== 'todos') {
+      if (tipoProducto === 'concurso') {
+        filtro.tipoProducto = { $in: ['casa', 'auto', 'comercial'] };
+      } else if (tipoProducto === 'vida') {
+        filtro = {
+          $and: [
+            { trimestreCorporativo: 1 },
+            { cerrado: true },
+            {
+              $or: [
+                { nombreCliente: { $regex: termino, $options: 'i' } },
+                { nombreEmpleado: { $regex: termino, $options: 'i' } },
+                { nombreLider: { $regex: termino, $options: 'i' } },
+                { nombreSupervisor: { $regex: termino, $options: 'i' } }
+              ]
+            },
+            {
+              $or: [
+                { tipoProducto: 'vida' },
+                { tipoProducto: { $exists: false } }
+              ]
+            }
+          ]
+        };
+      } else {
+        filtro.tipoProducto = tipoProducto;
+      }
+    }
+    
+    const referidos = await AñoCorporativo.find(filtro);
+    
+    console.log(`Encontrados ${referidos.length} referidos corporativos (trimestre 1)`);
     
     // Agrupar por empleado
     const referidosPorEmpleado = [];
@@ -657,28 +783,26 @@ app.post('/api/referidos', estaAutenticado, puedeEditar, async (req, res) => {
     
     await nuevoReferido.save();
     
-    // Si es de tipo vida, también guardarlo en el año corporativo
-    if (tipoProductoFinal === 'vida') {
-      const trimestreCorporativo = obtenerTrimestreCorporativo(fechaActual);
-      const añoCorporativo = fechaActual.getFullYear();
-      
-      const referidoCorporativo = new AñoCorporativo({
-        numeroCliente,
-        nombreCliente,
-        nombreEmpleado,
-        paisEmpleado,
-        nombreSupervisor: nombreLider, // Para compatibilidad
-        nombreLider,
-        tipoEnvio: tipoEnvio || 'linea',
-        tipoProducto: 'vida',
-        fechaEnvio: fechaActual,
-        cerrado: false,
-        trimestreCorporativo,
-        añoCorporativo
-      });
-      
-      await referidoCorporativo.save();
-    }
+    // Guardar todos los tipos de productos en el año corporativo
+    const trimestreCorporativo = obtenerTrimestreCorporativo(fechaActual);
+    const añoCorporativo = fechaActual.getFullYear();
+    
+    const referidoCorporativo = new AñoCorporativo({
+      numeroCliente,
+      nombreCliente,
+      nombreEmpleado,
+      paisEmpleado,
+      nombreSupervisor: nombreLider, // Para compatibilidad
+      nombreLider,
+      tipoEnvio: tipoEnvio || 'linea',
+      tipoProducto: tipoProductoFinal,
+      fechaEnvio: fechaActual,
+      cerrado: false,
+      trimestreCorporativo,
+      añoCorporativo
+    });
+    
+    await referidoCorporativo.save();
     
     const referidos = await Referido.find({ cerrado: false }).sort({ fechaEnvio: -1 });
     res.status(201).json(referidos);
@@ -727,25 +851,23 @@ app.put('/api/referidos/:id/cerrar', estaAutenticado, puedeEditar, async (req, r
     const referidoGuardado = await referido.save();
     console.log('Referido guardado correctamente:', referidoGuardado);
     
-    // Si es de tipo vida, también cerrar en el año corporativo
-    if (referido.tipoProducto === 'vida' || !referido.tipoProducto) {
-      const referidoCorporativo = await AñoCorporativo.findOne({
-        nombreCliente: referido.nombreCliente,
-        nombreEmpleado: referido.nombreEmpleado,
-        fechaEnvio: referido.fechaEnvio,
-        cerrado: false
-      });
-      
-      if (referidoCorporativo) {
-        referidoCorporativo.cerrado = true;
-        referidoCorporativo.fechaCierre = fechaCierre;
-        referidoCorporativo.nombreCerrador = nombreCerradorFinal;
-        referidoCorporativo.nombreCompania = nombreCompaniaFinal;
-        await referidoCorporativo.save();
-        console.log('Referido corporativo también cerrado');
-      } else {
-        console.log('No se encontró referido corporativo correspondiente para cerrar');
-      }
+    // También cerrar en el año corporativo
+    const referidoCorporativo = await AñoCorporativo.findOne({
+      nombreCliente: referido.nombreCliente,
+      nombreEmpleado: referido.nombreEmpleado,
+      fechaEnvio: referido.fechaEnvio,
+      cerrado: false
+    });
+    
+    if (referidoCorporativo) {
+      referidoCorporativo.cerrado = true;
+      referidoCorporativo.fechaCierre = fechaCierre;
+      referidoCorporativo.nombreCerrador = nombreCerradorFinal;
+      referidoCorporativo.nombreCompania = nombreCompaniaFinal;
+      await referidoCorporativo.save();
+      console.log('Referido corporativo también cerrado');
+    } else {
+      console.log('No se encontró referido corporativo correspondiente para cerrar');
     }
     
     // Verificar que el referido se guardó correctamente
@@ -768,14 +890,12 @@ app.delete('/api/referidos/:id', estaAutenticado, puedeEditar, async (req, res) 
     const referido = await Referido.findById(id);
     
     if (referido) {
-      // Si es de tipo vida, también eliminar del año corporativo
-      if (referido.tipoProducto === 'vida' || !referido.tipoProducto) {
-        await AñoCorporativo.findOneAndDelete({
-          nombreCliente: referido.nombreCliente,
-          nombreEmpleado: referido.nombreEmpleado,
-          fechaEnvio: referido.fechaEnvio
-        });
-      }
+      // También eliminar del año corporativo
+      await AñoCorporativo.findOneAndDelete({
+        nombreCliente: referido.nombreCliente,
+        nombreEmpleado: referido.nombreEmpleado,
+        fechaEnvio: referido.fechaEnvio
+      });
       
       await Referido.findByIdAndDelete(id);
     }
@@ -857,6 +977,91 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
+// Endpoint para corregir inconsistencias
+app.post('/api/corregir-conteos', estaAutenticado, puedeEditar, async (req, res) => {
+  try {
+    console.log('Iniciando corrección de conteos...');
+    
+    // 1. Eliminar duplicados en AñoCorporativo
+    const duplicados = await AñoCorporativo.aggregate([
+      {
+        $group: {
+          _id: { nombreCliente: "$nombreCliente", nombreEmpleado: "$nombreEmpleado", fechaEnvio: "$fechaEnvio" },
+          docs: { $push: "$_id" },
+          count: { $sum: 1 }
+        }
+      },
+      { $match: { count: { $gt: 1 } } }
+    ]);
+
+    let eliminados = 0;
+    for (const grupo of duplicados) {
+      const idsAEliminar = grupo.docs.slice(1);
+      const resultado = await AñoCorporativo.deleteMany({ _id: { $in: idsAEliminar } });
+      eliminados += resultado.deletedCount;
+    }
+
+    // 2. Corregir trimestres en historial
+    const sinTrimestre = await HistorialReferido.find({
+      $or: [{ trimestreCorporativo: { $exists: false } }, { trimestreCorporativo: null }]
+    });
+
+    for (const registro of sinTrimestre) {
+      const fecha = registro.fechaCierre || registro.fechaEnvio;
+      const trimestre = obtenerTrimestreCorporativo(fecha);
+      await HistorialReferido.updateOne({ _id: registro._id }, { trimestreCorporativo: trimestre });
+    }
+
+    // 3. Conteos finales
+    const corpFinal = await AñoCorporativo.countDocuments({ cerrado: true });
+    const histQ1Final = await HistorialReferido.countDocuments({ trimestreCorporativo: 1 });
+    const julio = await HistorialReferido.countDocuments({ mes: 7 });
+    const agosto = await HistorialReferido.countDocuments({ mes: 8 });
+    const septiembre = await HistorialReferido.countDocuments({ mes: 9 });
+    const totalIndividual = julio + agosto + septiembre;
+
+    res.json({
+      mensaje: 'Corrección completada',
+      eliminados,
+      corregidos: sinTrimestre.length,
+      conteos: {
+        julio, agosto, septiembre, totalIndividual,
+        corporativo: corpFinal,
+        trimestreQ1: histQ1Final
+      }
+    });
+  } catch (error) {
+    console.error('Error al corregir conteos:', error);
+    res.status(500).json({ error: 'Error al corregir conteos' });
+  }
+});
+
+// Endpoint para verificar conteos
+app.get('/api/verificar-conteos', async (req, res) => {
+  try {
+    const julio = await HistorialReferido.countDocuments({ mes: 7 });
+    const agosto = await HistorialReferido.countDocuments({ mes: 8 });
+    const septiembre = await HistorialReferido.countDocuments({ mes: 9 });
+    const totalIndividual = julio + agosto + septiembre;
+    
+    const corporativo = await AñoCorporativo.countDocuments({ cerrado: true });
+    const trimestreQ1 = await HistorialReferido.countDocuments({ trimestreCorporativo: 1 });
+    
+    res.json({
+      individual: { julio, agosto, septiembre, total: totalIndividual },
+      corporativo,
+      trimestreQ1,
+      diferencias: {
+        individualVsCorporativo: corporativo - totalIndividual,
+        corporativoVsQ1: corporativo - trimestreQ1,
+        individualVsQ1: totalIndividual - trimestreQ1
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al verificar conteos' });
+  }
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
@@ -864,4 +1069,6 @@ app.listen(PORT, () => {
   console.log('- /api/historial/buscar');
   console.log('- /api/referidos/cerrados/buscar');
   console.log('- /api/ano-corporativo/buscar');
+  console.log('- /api/verificar-conteos');
+  console.log('- /api/corregir-conteos');
 });

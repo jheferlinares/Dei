@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Conteos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .resultado { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .diferencia { background-color: #ffebee; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Verificación de Conteos de Referidos</h1>
+    
+    <button onclick="verificarTodo()">Verificar Todos los Conteos</button>
+    
+    <div id="resultados"></div>
+
+    <script>
+        async function verificarTodo() {
+            const resultados = document.getElementById('resultados');
+            resultados.innerHTML = '<p>Verificando...</p>';
+            
+            try {
+                // 1. Verificar conteo individual por mes
+                const julio = await fetch('/api/historial?mes=7&año=2024');
+                const julioData = await julio.json();
+                
+                const agosto = await fetch('/api/historial?mes=8&año=2024');
+                const agostoData = await agosto.json();
+                
+                const septiembre = await fetch('/api/historial?mes=9&año=2024');
+                const septiembreData = await septiembre.json();
+                
+                const totalIndividual = julioData.total + agostoData.total + septiembreData.total;
+                
+                // 2. Verificar año corporativo
+                const corporativo = await fetch('/api/ano-corporativo/estadisticas');
+                const corporativoData = await corporativo.json();
+                
+                // 3. Verificar trimestre Q1
+                const trimestre = await fetch('/api/historial?trimestre=1');
+                const trimestreData = await trimestre.json();
+                
+                // Mostrar resultados
+                let html = `
+                    <div class="resultado">
+                        <h3>Conteo Individual por Mes</h3>
+                        <p>Julio: ${julioData.total}</p>
+                        <p>Agosto: ${agostoData.total}</p>
+                        <p>Septiembre: ${septiembreData.total}</p>
+                        <p><strong>Total Individual: ${totalIndividual}</strong></p>
+                    </div>
+                    
+                    <div class="resultado">
+                        <h3>Año Corporativo</h3>
+                        <p><strong>Total Cerrados: ${corporativoData.totalCerrados}</strong></p>
+                    </div>
+                    
+                    <div class="resultado">
+                        <h3>Trimestre Q1 (Jul-Ago-Sep)</h3>
+                        <p><strong>Total Trimestre: ${trimestreData.total}</strong></p>
+                    </div>
+                    
+                    <div class="resultado diferencia">
+                        <h3>Diferencias Encontradas</h3>
+                        <p>Individual vs Corporativo: ${corporativoData.totalCerrados - totalIndividual}</p>
+                        <p>Corporativo vs Trimestre: ${corporativoData.totalCerrados - trimestreData.total}</p>
+                        <p>Individual vs Trimestre: ${totalIndividual - trimestreData.total}</p>
+                    </div>
+                `;
+                
+                // Análisis adicional
+                html += '<div class="resultado"><h3>Análisis Detallado</h3>';
+                
+                if (totalIndividual === 594) {
+                    html += '<p>✓ Conteo individual coincide con lo esperado (594)</p>';
+                } else {
+                    html += `<p>⚠️ Conteo individual no coincide: esperado 594, obtenido ${totalIndividual}</p>`;
+                }
+                
+                if (corporativoData.totalCerrados === 597) {
+                    html += '<p>✓ Año corporativo coincide con lo esperado (597)</p>';
+                } else {
+                    html += `<p>⚠️ Año corporativo no coincide: esperado 597, obtenido ${corporativoData.totalCerrados}</p>`;
+                }
+                
+                if (trimestreData.total === 455) {
+                    html += '<p>✓ Trimestre Q1 coincide con lo esperado (455)</p>';
+                } else {
+                    html += `<p>⚠️ Trimestre Q1 no coincide: esperado 455, obtenido ${trimestreData.total}</p>`;
+                }
+                
+                html += '</div>';
+                
+                resultados.innerHTML = html;
+                
+            } catch (error) {
+                resultados.innerHTML = `<div class="resultado diferencia"><h3>Error</h3><p>${error.message}</p></div>`;
+            }
+        }
+    </script>
+</body>
+</html>

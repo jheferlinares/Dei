@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Corregir Conteos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        .resultado { margin: 10px 0; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
+        .error { background: #ffebee; }
+        .success { background: #e8f5e8; }
+    </style>
+</head>
+<body>
+    <h1>Corrección de Conteos de Referidos</h1>
+    
+    <button onclick="verificarConteos()">1. Verificar Conteos Actuales</button>
+    <button onclick="corregirConteos()">2. Corregir Inconsistencias</button>
+    
+    <div id="resultado"></div>
+
+    <script>
+        async function verificarConteos() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '<p>Verificando...</p>';
+            
+            try {
+                const response = await fetch('/api/verificar-conteos');
+                const data = await response.json();
+                
+                resultado.innerHTML = `
+                    <div class="resultado">
+                        <h3>Conteos Actuales</h3>
+                        <p><strong>Individual por mes:</strong></p>
+                        <p>• Julio: ${data.individual.julio}</p>
+                        <p>• Agosto: ${data.individual.agosto}</p>
+                        <p>• Septiembre: ${data.individual.septiembre}</p>
+                        <p>• <strong>Total Individual: ${data.individual.total}</strong></p>
+                        
+                        <p><strong>Año Corporativo:</strong> ${data.corporativo}</p>
+                        <p><strong>Trimestre Q1:</strong> ${data.trimestreQ1}</p>
+                        
+                        <h4>Diferencias:</h4>
+                        <p>• Individual vs Corporativo: ${data.diferencias.individualVsCorporativo}</p>
+                        <p>• Corporativo vs Q1: ${data.diferencias.corporativoVsQ1}</p>
+                        <p>• Individual vs Q1: ${data.diferencias.individualVsQ1}</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultado.innerHTML = `<div class="resultado error"><h3>Error</h3><p>${error.message}</p></div>`;
+            }
+        }
+
+        async function corregirConteos() {
+            if (!confirm('¿Estás seguro de corregir las inconsistencias? Esta acción eliminará duplicados.')) {
+                return;
+            }
+            
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '<p>Corrigiendo...</p>';
+            
+            try {
+                const response = await fetch('/api/corregir-conteos', { method: 'POST' });
+                const data = await response.json();
+                
+                resultado.innerHTML = `
+                    <div class="resultado success">
+                        <h3>Corrección Completada</h3>
+                        <p><strong>Duplicados eliminados:</strong> ${data.eliminados}</p>
+                        <p><strong>Trimestres corregidos:</strong> ${data.corregidos}</p>
+                        
+                        <h4>Conteos Finales:</h4>
+                        <p>• Julio: ${data.conteos.julio}</p>
+                        <p>• Agosto: ${data.conteos.agosto}</p>
+                        <p>• Septiembre: ${data.conteos.septiembre}</p>
+                        <p>• <strong>Total Individual: ${data.conteos.totalIndividual}</strong></p>
+                        <p>• <strong>Año Corporativo: ${data.conteos.corporativo}</strong></p>
+                        <p>• <strong>Trimestre Q1: ${data.conteos.trimestreQ1}</strong></p>
+                        
+                        <p style="color: green; font-weight: bold;">
+                            ${data.conteos.totalIndividual === data.conteos.corporativo && 
+                              data.conteos.corporativo === data.conteos.trimestreQ1 ? 
+                              '✓ TODOS LOS CONTEOS AHORA COINCIDEN' : 
+                              '⚠️ Aún hay diferencias'}
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                resultado.innerHTML = `<div class="resultado error"><h3>Error</h3><p>${error.message}</p></div>`;
+            }
+        }
+    </script>
+</body>
+</html>
