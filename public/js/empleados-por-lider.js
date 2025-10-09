@@ -87,6 +87,7 @@ const empleadosPorLider = {
   
   'Empleados Adicionales': [
     'Angelica Suarez',
+    'Benyeili Calzado',
     'Chackie Polanco',
     'Cristina Marques',
     'Crismely Rubert',
