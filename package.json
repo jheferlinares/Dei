@@ -4,7 +4,8 @@
   "description": "Aplicación para seguimiento de referidos por trabajador",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "body-parser": "^1.20.2",
