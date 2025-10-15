@@ -102,6 +102,7 @@ const empleadosPorLider = {
     'Leonela Oduber',
     'Lovely Concepcion',
     'Michel Caro',
+    'Minelli de la Cruz',
     'Omar Fonseca',
     'Ybelise Teran',
     'Yessica Pacheco',
